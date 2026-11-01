@@ -1,0 +1,50 @@
+# ─── Build-context exclusions ────────────────────────────────────────────────
+# Anything listed here can never reach a Docker layer, an image, or a registry.
+# The first block is the one that matters most: SECRETS.
+
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+**/credentials*
+
+# Version control and CI. `.git` is excluded both because it is large and
+# because its history is the one place a previously-committed secret could
+# still be recovered from.
+.git
+.gitignore
+.github
+
+# Dependencies and build output are produced inside the image, never copied in.
+node_modules
+dist
+coverage
+
+# Tests, fixtures and tooling: not part of the production runtime.
+tests
+vitest.config.ts
+tools
+
+# Components that are demos, consoles or synthetic bridges — deliberately NOT
+# deployed. The production surface is the Fastify app in `src/index.ts` only.
+# (These live under `src/` so they still enter the BUILD stage for typechecking
+# consistency, but nothing in `dist/index.js`'s import graph reaches them, and
+# nothing here starts them.)
+storm-reports
+assets
+.claude
+.codex_context
+
+# Local editor / OS residue and logs.
+.DS_Store
+**/.DS_Store
+*.log
+.vscode
+.idea
+
+# Documentation and planning material: useful to humans, dead weight in an image.
+docs
+*.md
+!README.md

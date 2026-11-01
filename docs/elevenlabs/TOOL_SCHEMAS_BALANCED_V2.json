@@ -1,0 +1,282 @@
+{
+  "$comment": "BALANCED V2 ((internal doc, not included in the template) ADR-020). The COMPLETE tool set for a DUPLICATED ElevenLabs agent: exactly two tools, no more. It is a separate document from TOOL_SCHEMAS.json on purpose — that file is the contract of the agent currently taking real calls, and it must not change while this one is being tested. The V2 agent never asks who the customer wants; it asks for the service, the day and morning-or-afternoon, offers up to three UNIQUE salon hours with nobody named, and reveals the professional only in the final summary. Mirrors src/schemas/balancedV2Schemas.ts, src/schemas/aiSchemas.ts (voiceBookSchema) and src/routes/balancedV2.ts. tests/balancedV2Contract.test.ts asserts route/document agreement. Values between angle brackets are placeholders and secrets must stay out of Git.",
+  "baseUrl": "https://<DOMAIN>",
+  "authHeader": {
+    "name": "X-AI-Webhook-Secret",
+    "value": "<AI_WEBHOOK_SECRET>"
+  },
+  "bookingAuthHeader": {
+    "$comment": "Required by booking_create_booking_balanced_v2 and by nothing else, IN ADDITION to X-AI-Webhook-Secret, whenever AI_BOOKING_WEBHOOK_SECRET is configured. Two credentials in two headers: reading the agenda and creating an appointment are not the same privilege.",
+    "name": "X-AI-Booking-Secret",
+    "value": "<AI_BOOKING_WEBHOOK_SECRET>"
+  },
+  "tools": [
+    {
+      "name": "booking_availability_balanced_v2",
+      "description": "Three actions on one endpoint. action=\"discover\": ask the salon which UNIQUE hours are free for a service, on a day, in the morning or the afternoon, and get back up to three numbered options plus a ready-to-speak Spanish sentence. NO professional is named and NO slot_token is issued — a discovery can never book anything. action=\"more\": the customer asked for OTHER hours — get the NEXT hours of the SAME question. Send conversation_id and NOTHING else; the middleware remembers where this call is up to, so you never send a cursor, a page number or a list of hours to skip, and you never repeat an hour you already offered. Call it whenever the customer asks for other or more hours, whatever has_more said: has_more=true is a promise that hours remain, not a permission slip, and the server answers deterministically either way. If has_more was false, or the half of the day is already walked out, the answer is no_more_options and the hours of the LAST page you offered are still lockable. action=\"lock\": turn one of the option numbers OF THE MOST RECENT page into a real, revalidated hueco and get the slot_token that booking_create_booking_balanced_v2 requires; the lock answer is the FIRST time you learn which professional it is, and it is what you read in the final summary. Every page is renumbered 1, 2, 3, and only the LATEST page counts — an index from an earlier page selects nothing. ALWAYS answers HTTP 200, including for failures: read the `outcome` field, never the status code, and NEVER retry a call that already answered. action=\"scan\": «scan = mira varios días de golpe (hasta 7) con una condición horaria opcional; el servidor filtra; devuelve una página de hasta 3 horas de hasta 3 días y days_summary; después lock por option_index o discover del día elegido». Use it the moment the customer does NOT fix a day («otro día», «me da igual», «cualquier día») or states an hour condition («a partir de las cinco», «antes de las diez»): ONE call replaces walking the days yourself. THE SERVER FILTERS — every hour it returns already satisfies after_time/before_time, so you never drop one from the list and never mention one it did not send. The page is numbered 1, 2, 3 exactly like a discover page, and action=\"lock\" with option_index takes one of them directly. *** date_from, days, after_time and before_time DESCRIBE THE QUESTION, NOT A POSITION IN THE ANSWER. *** They are not cursors: not a page number, not an offset, not a list of hours to skip. The middleware remembers where this call is up to, exactly as it does for action=\"more\", so you never reconstruct one of them from what you already heard. Read-only: it never creates, changes or cancels an appointment (external_mutation is always false).",
+      "method": "POST",
+      "path": "/ai/voice/v2/availability",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "description": "Bind to the system__conversation_id dynamic variable. Required for EVERY action, and it is the ONLY field action=\"more\" needs. It is what keeps this call's options, page and hueco separate from every other call's."
+          },
+          "action": {
+            "type": "string",
+            "enum": ["discover", "lock", "more", "scan"],
+            "description": "\"discover\" to ask for free hours on ONE day and one half of it; \"more\" to continue the SAME question with the next hours when the customer asks for other horarios; \"lock\" to choose one of the options of the most recent page; \"scan\" to look across SEVERAL days at once, with an optional hour condition, when the customer has not fixed a day or has said \"a partir de las cinco\"."
+          },
+          "service_id": {
+            "type": "integer",
+            "enum": [0, 1, 2],
+            "description": "discover only. Which service the customer wants. It decides how long the appointment is, so an hour free for one service may not be free for another."
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "discover only. The day the customer asked for, YYYY-MM-DD. One day per call. If that day is full or closed, the server may answer with the nearest LATER day that has hours (date_fallback=true): the options carry their own date, and you read the message as it is. Do NOT resend it with action=\"more\": the middleware already knows which day this page belongs to, and a value that disagrees with it answers continuation_mismatch."
+          },
+          "time_period": {
+            "type": "string",
+            "enum": ["morning", "afternoon"],
+            "description": "discover only. Which half of the day the customer wants. Always ask; there is no \"any\". If that half is empty and the other one is not, the answer comes back with offered_period set to the other half and a message that says so out loud — read that message as it is."
+          },
+          "preferred_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "description": "discover, or scan with days 1; optional. HH:mm on a 24-hour clock of ANY hour the customer says, at any moment, even after hours were offered (\"seis y cuarto\" de la tarde is \"18:15\"). Never answer a stated hour with action=\"more\". If that hour is free the answer offers it alone as option 1; if not, the message says so and offers the nearest free hours before and after it. It never widens a hard after_time/before_time."
+          },
+          "employee_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "discover only, optional. Set this ONLY if the customer names a professional without being asked. Bruno=1, Olga=2, Ramón=3. NEVER ask who they want, and never guess."
+          },
+          "date_from": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "scan only, optional. «Primer día de la ventana; si falta, hoy.» YYYY-MM-DD. Send tomorrow when the customer has not fixed a day, or the day after the one they have just turned down — never a day already rejected. It is the START of the question, NOT a cursor: re-sending it never means \"the next page\"."
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 7,
+            "description": "scan only, optional. How many days the window covers from date_from, 1 to 7. Defaults to 7. Send 1 when the customer named a day AND an hour condition («el jueves a partir de las cinco»). It describes the QUESTION, never how far through an answer you are."
+          },
+          "after_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "description": "scan only, optional. HH:mm on a 24-hour clock — «a partir de las cinco» de la tarde is \"17:00\". «Solo horas iguales o posteriores.» THE SERVER APPLIES IT: everything that comes back already satisfies it, so you never filter the list yourself and never add an hour it did not send."
+          },
+          "before_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "description": "scan only, optional. HH:mm on a 24-hour clock — «antes de las diez» is \"10:00\". Hours up to and including it. Can be combined with after_time to bound a slice of the day. Applied by the server, exactly like after_time."
+          },
+          "weekday": {
+            "type": "string",
+            "enum": ["martes", "miércoles", "jueves", "viernes", "sábado", "domingo", "lunes"],
+            "description": "scan only. The weekday the customer wants when ANY such day is fine («los sábados», «cualquier sábado», «un martes por la tarde»). The server then looks ONLY at that weekday in the next `weeks` weeks and never offers another weekday. Do not send it for one specific day («este sábado», «el sábado 17»): that is a discover."
+          },
+          "weeks": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6,
+            "description": "scan with weekday only. How many weeks ahead, 1-6. Default 4."
+          },
+          "option_index": {
+            "type": "integer",
+            "enum": [1, 2, 3],
+            "description": "lock only. Which of the options you just offered the customer chose. It must be a number the MOST RECENT discover or more actually returned — every page is renumbered 1, 2, 3, and an index from a page that has been replaced selects nothing (outcome=\"option_not_found\"). You cannot state a date or an hour here, and you must never invent an index."
+          },
+          "preferred_employee_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "lock only, optional. Set this ONLY when, at the final summary, the customer asks for a different professional. Bruno=1, Olga=2, Ramón=3. If that person is not free at that hour the answer is outcome=\"employee_unavailable\" and it carries current_employee_id/current_employee_name, so you can offer to keep the assigned professional or look for another hour with the requested one."
+          }
+        },
+        "required": ["conversation_id", "action"],
+        "additionalProperties": false
+      },
+      "discoverOutcomes": {
+        "options_available": "Up to three unique hours are offered, numbered 1, 2, 3 — from a discover, or the NEXT hours from a more. Read `message` as it is. `total_unique_slots` is how many unique hours the salon has in the half of the day being offered, and it does NOT change between pages. `has_more` is true only when hours remain that this call has NOT been read yet, which is exactly when action=\"more\" has something to answer with. It tells you whether to OFFER more; it is not a permission slip \u2014 if the customer asks anyway, still call action=\"more\" and read the outcome. `page_index` and `offered_so_far` are diagnostics — never say them out loud. LOOK-AHEAD: when the day asked for in a discover is full or closed, the server itself looks at the next seven days (same service, half of the day, preferred_time and professional) and answers options_available with `date_fallback`=true and `requested_date`; the options then belong to the NEAREST later day with hours (read each option's `date`). It is an ordinary page: lock by option_index, more continues that same day. Read the message as it is; a «no» to that day is not a rejection of every alternative — ask once which day suits them better.",
+        "no_availability": "Nothing free. Not an error and not a dead end: read the message as it is, it already ends with an open offer. After a discover it may say nothing is free in the next days either and offer the following week (scan with date_from=`next_search_from`, days 7) or the other half of the day (discover of the same day with the other time_period). After a multi-day scan it offers the following week (date_from=`next_search_from`) and, if there was an hour condition, another hour. `next_search_from` is never said out loud.",
+        "invalid_request": "The call could not be read. Ask the customer again for the day and morning-or-afternoon, then call once more. Do NOT repeat the same call.",
+        "agenda_unavailable": "The salon's diary could not be read \u2014 it can come from discover, more or lock. The message is exactly \u00abAhora mismo no puedo consultar la agenda.\u00bb Say it, offer ONE retry, and if it fails again close with the WhatsApp sentence from the prompt. Never invent an hour, and never promise that anyone will phone the customer.",
+        "no_more_options": "Only from action=\"more\": every hour of that half of the day has already been offered to this call. Nothing is left and nothing restarts. IT IS NOT A DEAD END: the last page you read out is still on the table, so if the customer now picks one of those hours, call action=\"lock\" with its index exactly as usual. Otherwise say the message, which offers the other half of the day or a different day, and call discover again. Asking for more a second time returns this same answer.",
+        "continuation_lost": "Only from action=\"more\": this call has no page to continue — nothing was discovered yet, or the page aged out. The hours are NOT rebuilt from the conversation. Say the message and call discover again with the day and the half of the day.",
+        "continuation_mismatch": "Only from action=\"more\": the fields you sent describe a different question from the page being continued (another day, another service, another professional, another half of the day). Send action=\"more\" with conversation_id ONLY, or call discover afresh for the new question.",
+        "date_conflict": "2026-10-10. The day pieces (dia_semana, dia_mes, mes, relativo, en_dias) or fecha_dicha do not name one bookable day (weekday and number disagree, past, closed, unclear). Nothing was searched. Read the message as is (a short question) and wait; then search again with the pieces of their answer.",
+        "own_booking_at_time": "2026-10-11. WhatsApp or caller id only. The hour asked for is the customer's OWN standing appointment: nothing is offered or locked. Read the message as it is (it asks whether to change its service or pick another hour); never search that hour as a new appointment."
+      },
+      "lockOutcomes": {
+        "locked": "The hueco is yours to book. `slot.slot_token` is the ONLY thing booking_create_booking_balanced_v2 accepts, and `slot.employee_name` is the FIRST time you may name a professional out loud.",
+        "option_not_found": "That option number is not one this call is holding. Call discover again and offer the hours afresh.",
+        "slot_taken": "That hour has just been taken. Call discover again and offer what is left.",
+        "employee_unavailable": "The requested professional is not free at that hour. Offer both ways out, using current_employee_name.",
+        "authorization_unavailable": "The hour is real and still free, and it cannot be held right now. The message is exactly \u00abAhora mismo no puedo dejar esa hora apartada.\u00bb Say it and retry the SAME lock once; if it fails again close with the WhatsApp sentence from the prompt. Do not promise the appointment, do not go back to discover (the hour is not the problem), and never promise that anyone will phone the customer.",
+        "invalid_request": "The call could not be read. Re-ask the customer which option they want.",
+        "agenda_unavailable": "The salon's diary could not be re-read. Say the message; never book without a lock.",
+        "own_booking_at_time": "2026-10-11. WhatsApp or caller id only. The chosen hour is the customer's OWN standing appointment: nothing was locked. Read the message as it is."
+      },
+      "responseExampleDiscover": {
+        "outcome": "options_available",
+        "available": true,
+        "message": "Ese día me quedan las diez, las once y las doce. ¿Cuál prefieres?",
+        "options": [
+          { "option_index": 1, "date": "2026-09-15", "time": "10:00" },
+          { "option_index": 2, "date": "2026-09-15", "time": "11:00" },
+          { "option_index": 3, "date": "2026-09-15", "time": "12:00" }
+        ],
+        "total_unique_slots": 3,
+        "has_more": false,
+        "requested_period": "morning",
+        "offered_period": "morning",
+        "period_fallback": false,
+        "page_index": 1,
+        "offered_so_far": 3,
+        "external_mutation": false
+      },
+      "responseExampleMore": {
+        "$comment": "The customer said «otros horarios» after the discover above, on a day whose morning really has six unique hours. The request was conversation_id plus action=\"more\" and NOTHING else — no cursor, no page number, no list of hours to skip. This page continues a DAY question, so it carries no window fields; a `more` that continues a `scan` also returns `days_checked` and `partial`, unchanged from the scan that opened the window — the window is read once and page two is a slice of that same read.",
+        "outcome": "options_available",
+        "available": true,
+        "message": "Después de esas solo me quedan las diez y media, las once y las doce. ¿Cuál prefieres?",
+        "options": [
+          { "option_index": 1, "date": "2026-09-15", "time": "10:30" },
+          { "option_index": 2, "date": "2026-09-15", "time": "11:00" },
+          { "option_index": 3, "date": "2026-09-15", "time": "12:00" }
+        ],
+        "total_unique_slots": 6,
+        "has_more": false,
+        "requested_period": "morning",
+        "offered_period": "morning",
+        "period_fallback": false,
+        "page_index": 2,
+        "offered_so_far": 6,
+        "external_mutation": false
+      },
+      "responseExampleScan": {
+        "$comment": "The call came in on Monday 2026-09-14. The customer said «me da igual el día, pero a partir de las cinco», so the request was action=\"scan\" with service_id, date_from=\"2026-09-15\", days=7 and after_time=\"17:00\" — no cursor, no page number, no list of hours to skip. EVERY option below already satisfies after_time: the server filtered, not the agent. days_summary, days_checked, partial, page_index, offered_so_far and total_unique_slots are diagnostics for you — never say them out loud.",
+        "outcome": "options_available",
+        "available": true,
+        "message": "Tengo mañana a las cinco y media, el miércoles a las cinco y el viernes a las siete. Y tengo alguna más. ¿Cuál te viene mejor?",
+        "options": [
+          { "option_index": 1, "date": "2026-09-15", "time": "17:30" },
+          { "option_index": 2, "date": "2026-09-16", "time": "17:00" },
+          { "option_index": 3, "date": "2026-09-18", "time": "19:00" }
+        ],
+        "days_summary": [
+          { "date": "2026-09-15", "weekday_es": "martes", "count": 9, "first_time": "09:30", "last_time": "19:30", "matching_count": 4 },
+          { "date": "2026-09-16", "weekday_es": "miércoles", "count": 6, "first_time": "10:00", "last_time": "18:00", "matching_count": 2 },
+          { "date": "2026-09-17", "weekday_es": "jueves", "count": 2, "first_time": "09:30", "last_time": "10:30", "matching_count": 0 },
+          { "date": "2026-09-18", "weekday_es": "viernes", "count": 5, "first_time": "11:00", "last_time": "19:00", "matching_count": 3 },
+          { "date": "2026-09-19", "weekday_es": "sábado", "count": 1, "first_time": "12:00", "last_time": "12:00", "matching_count": 0 }
+        ],
+        "days_checked": ["2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19"],
+        "partial": true,
+        "page_index": 1,
+        "offered_so_far": 3,
+        "total_unique_slots": 9,
+        "has_more": true,
+        "external_mutation": false
+      },
+      "responseExampleLock": {
+        "outcome": "locked",
+        "locked": true,
+        "message": "Te lo dejo a las once con Olga.",
+        "slot": {
+          "date": "2026-09-15",
+          "time": "11:00",
+          "reservation_date": "2026-09-15 11:00:00",
+          "employee_id": 2,
+          "employee_name": "Olga",
+          "slot_token": "tk1.<opaque-authorization-copy-verbatim>"
+        },
+        "external_mutation": false
+      }
+    },
+    {
+      "name": "booking_create_booking_balanced_v2",
+      "description": "Create the appointment for the hueco a previous action=\"lock\" returned. Call it ONCE, and only after the customer has said a clear, explicit yes to the full summary (service, day, hour, professional, name and phone). `slot_token` must be copied VERBATIM from that lock answer — the day, the hour, the professional and the service are read out of it, which is why this tool has no fields for them and you must never reconstruct one. A token from a discovery, from another call, or from the salon's other agent is refused. ALWAYS answers HTTP 200, including for every failure: read `outcome`, never the status code. NEVER call it twice for the same customer: if you are unsure whether it went through, say so and let the salon check — a second call can create a second appointment. Only say the appointment is made when booked=true AND outcome=\"confirmed\".",
+      "method": "POST",
+      "path": "/ai/voice/v2/book",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>",
+        "X-AI-Booking-Secret": "<AI_BOOKING_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "description": "Bind to the system__conversation_id dynamic variable. Must be the same one used for discover and lock."
+          },
+          "customer_name": {
+            "type": "string",
+            "description": "The customer's first name, as they said it. Ask for it; never fill it with \"Cliente\" or any other placeholder."
+          },
+          "customer_surnames": {
+            "type": "string",
+            "description": "The customer's surnames, as they said them. Ask for them; never fill them with \"Desconocido\" or any other placeholder."
+          },
+          "phone": {
+            "type": "string",
+            "description": "A Spanish contact number the customer gave you, 9 digits starting 6, 7, 8 or 9 (e.g. +34600000123). Ask for it and read it back; never invent one."
+          },
+          "slot_token": {
+            "type": "string",
+            "description": "Copied VERBATIM from slot.slot_token of the lock answer for this call. Never edited, never rebuilt, never reused from an earlier lock."
+          },
+          "confirmed_by_customer": {
+            "type": "boolean",
+            "description": "Exactly true, and only after a clear spoken yes to the whole summary. Anything else comes back as outcome=\"not_confirmed\" and nothing is created."
+          }
+        },
+        "required": [
+          "conversation_id",
+          "customer_name",
+          "customer_surnames",
+          "phone",
+          "slot_token",
+          "confirmed_by_customer"
+        ],
+        "additionalProperties": false
+      },
+      "outcomes": {
+        "confirmed": "The appointment exists. Only here may you say it is made.",
+        "write_disabled": "Booking by phone is switched off on this deployment (for example ENABLE_BALANCED_V2_CREATE=false). Nothing was created. The message is exactly \u00abAhora mismo no puedo dejar la cita hecha. No ha quedado confirmada.\u00bb Say it, do not retry, and close with the WhatsApp sentence from the prompt.",
+        "slot_taken": "That hour was taken first. Nothing was created. Go back to discover.",
+        "not_confirmed": "confirmed_by_customer was not exactly true. Nothing was created. Get a clear yes and call once more.",
+        "invalid_customer_data": "The name, surnames or phone are missing, trivial or a placeholder. Nothing was created. Ask the customer for all three.",
+        "possible_duplicate": "V5 only (several bookings per call); never produced for this agent.",
+        "change_not_available": "V5 only (replaces_booking_number); never produced for this agent.",
+        "phone_booking_limit": "Nothing was created and the lock is still valid: this phone already has the maximum number of pending (future) appointments in the salon (max_future_bookings_per_phone, normally 3). Read the message as it is and do not create again.",
+        "slot_time_mismatch": "Only when option_time/option_date was sent: the locked slot holds another hour (locked_time/locked_date). Nothing was created and the lock is still valid. Read the message; if the customer wants the other hour, lock it before a new summary.",
+        "change_confirm_required": "V5 voice only (replaces_existing_booking, 2026-10-10); never produced for a V2/V4 request. Nothing was created.",
+        "changed_old_not_cancelled": "V5 only (replaces_booking_number); never produced for this agent.",
+        "invalid_slot_token": "The hueco was never authorized for this call — no token, a rebuilt one, or one from the other agent. Nothing was created. Go back to discover and lock.",
+        "slot_token_expired": "The hueco was authorized too long ago. Nothing was created. Lock it again.",
+        "slot_not_authorized": "The token is not the hueco on the table right now — a later discover or lock replaced it. Nothing was created. Lock again.",
+        "already_booked_in_call": "This call already produced an appointment. Nothing was created. The message is exactly \u00abEn esta llamada ya hay una cita hecha. No puedo hacer otra desde aqu\u00ed.\u00bb Say it and close with the WhatsApp sentence from the prompt.",
+        "uncertain": "The appointment may or may not exist \u2014 external_mutation is null and mutation_status is \"unknown\". Do NOT say it is made and do NOT try again: a second call can create a second appointment. The message is exactly \u00abNo he podido confirmar si la cita ha quedado hecha. Por mi parte no est\u00e1 confirmada.\u00bb Say it and close with the WhatsApp sentence from the prompt. Never promise that anybody will check it or phone the customer.",
+        "upstream_error": "The salon's system refused the request. Nothing was created. The message is exactly \u00abNo he podido hacer la cita. No ha quedado confirmada.\u00bb Say it, do not retry, and close with the WhatsApp sentence from the prompt.",
+        "misconfigured_owner": "A configuration fault on our side. Nothing was created. The message is the same one upstream_error carries, exactly \u00abNo he podido hacer la cita. No ha quedado confirmada.\u00bb Say it and close with the WhatsApp sentence from the prompt. Never tell the customer to phone the salon: they are already on that line."
+      },
+      "responseExample": {
+        "booked": true,
+        "message": "Perfecto, la reserva queda confirmada para el martes 15 de septiembre a las 11:00.",
+        "outcome": "confirmed",
+        "external_mutation": true,
+        "mutation_status": "confirmed",
+        "idempotency_status": "original"
+      }
+    }
+  ]
+}

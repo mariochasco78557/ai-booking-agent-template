@@ -1,0 +1,21 @@
+{
+  "_nota": "Voces candidatas para python -m voice_agent.muestras. Nombres tomados del catálogo público de cada proveedor; comprobar en la cuenta antes de elegir (algunas pueden no estar en la región o tener acento latinoamericano).",
+  "azure": [
+    {"voz": "es-ES-ElviraNeural", "genero": "mujer", "nota": "la de por defecto en .env.example"},
+    {"voz": "es-ES-XimenaNeural", "genero": "mujer", "nota": ""},
+    {"voz": "es-ES-TrianaNeural", "genero": "mujer", "nota": ""},
+    {"voz": "es-ES-AlvaroNeural", "genero": "hombre", "nota": ""},
+    {"voz": "es-ES-DarioNeural", "genero": "hombre", "nota": ""},
+    {"voz": "es-ES-IsidoraMultilingualNeural", "genero": "mujer", "nota": "multilingüe; más natural, a veces más lenta"}
+  ],
+  "deepgram": [
+    {"voz": "aura-2-carina-es", "genero": "mujer", "nota": "comprobar acento"},
+    {"voz": "aura-2-alvaro-es", "genero": "hombre", "nota": "comprobar acento"},
+    {"voz": "aura-2-nestor-es", "genero": "hombre", "nota": "comprobar acento"}
+  ],
+  "frases": [
+    "Ese día me quedan las diez, las once y media y las doce. ¿Cuál prefieres?",
+    "Te resumo: corte de pelo, el martes a las diez de la mañana, con Olga, a nombre de Carlos García, teléfono seis, cero, cero; cero, cero, cero; uno, dos, tres. ¿Confirmas que quieres reservar esta cita con estos datos o prefieres que mire otro profesional?",
+    "Listo, ya tienes la cita: corte de pelo, el viernes dieciocho de octubre a las doce. ¿Te puedo ayudar en algo más?"
+  ]
+}

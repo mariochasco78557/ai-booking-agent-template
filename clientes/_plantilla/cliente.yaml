@@ -1,0 +1,64 @@
+# Client template. Copy this folder to clientes/<client-id>/ and edit. NO SECRETS here (they go in .env).
+# Example values describe an INVENTED business ("Demo Salon"); replace them all.
+# Precedence: environment variable > this file > code default.
+nombre: "Demo Salon"
+nombre_corto: "Demo Salon"      # optional; used as «el equipo de Demo Salon» (defaults to nombre)
+sector:                         # or short form: sector: "peluquería" (texts then say «el negocio»)
+  nombre: "peluquería"          # peluquería, clínica, taller, ...
+  negocio: "la peluquería"      # how texts name the business, with article («el taller», «la clínica»)
+  palabra_empleado: "peluquero" # word for one professional
+responsable: "Ana"              # optional; receives messages and alerts (defaults to the default employee)
+idioma: es-ES
+zona_horaria: Europe/Madrid
+telefono:                       # public business phone (synthetic example)
+  mostrar: "910 00 00 00"
+  e164: "+34910000000"
+direccion: "Calle Ejemplo 1, Ciudad"   # optional, one line
+enlaces:                        # optional, informative
+  web: "https://example.com"
+horario:                        # HH:MM-HH:MM ranges; empty list = closed
+  lunes:     ["09:00-13:30", "16:00-20:00"]
+  martes:    ["09:00-13:30", "16:00-20:00"]
+  miercoles: ["09:00-13:30", "16:00-20:00"]
+  jueves:    ["09:00-13:30", "16:00-20:00"]
+  viernes:   ["09:00-13:30", "16:00-20:00"]
+  sabado:    ["09:00-14:00"]
+  domingo:   []
+dias_cerrados: [domingo]        # optional; derived from empty horario lists when missing
+cierre_temprano:                # optional; from this time nothing else is offered that day
+  sabado: "14:00"
+cierres:                        # holidays / vacations (ISO dates)
+  - { desde: "2026-12-25", hasta: "2026-12-25", motivo: "Navidad" }
+duracion_cita_min: 30           # appointment length (calendar link, messages)
+servicios:                      # id = service id in the calendar backend (optional)
+  - { id: "1", nombre: "Corte", duracion_min: 30, precio: 15.0 }
+  - { id: "2", nombre: "Corte y barba", duracion_min: 45, precio: 22.0, etiquetas: { voz: "corte y barba", corta: "corte+barba" } }
+  # etiquetas (optional): how it is said by voice and in agenda alerts; defaults to the lowercase name
+empleados:                      # Google: calendario = the employee's Google Calendar id
+  - { nombre: "Ana", calendario: "ana.demo@group.calendar.google.com", id: 1 }
+  - { nombre: "Luis", calendario: "luis.demo@group.calendar.google.com", id: 2 }
+  # id (optional): numeric employee id in the core; defaults to calendario if numeric, else position 1..n
+# Texts: defaults live in src/core/texts/defaultTexts.es.ts; override any of them in
+# clientes/<client-id>/textos.yaml with the same key (see textos.yaml in this folder).
+tono: "cercano, claro y breve; tutea al cliente"
+canales:
+  whatsapp: false
+  voz: false
+# plantilla_whatsapp: "cita_confirmada"   # Meta-approved template; required unless WHATSAPP_NOTIFICATIONS_MODE=off (or WHATSAPP_TEMPLATE_NAME)
+calendario:
+  provider: memory              # memory (in-process demo, no credentials) | google-calendar
+  empleado_por_defecto: 1       # must be one of empleados[].calendario / empleados[].id
+  servicio_por_defecto: "1"
+  # google:                     # google-calendar only (see README.md in this folder)
+  #   calendario_unico: "business@group.calendar.google.com"   # one calendar for everyone; else one per employee
+  #   paso_min: 30              # minutes between slot starts (defaults to duracion_cita_min)
+marca_ia:                       # marker added to the name of bookings created by voice
+  prefijo: "IA -"
+  separador: space              # space | none
+limites:
+  max_reservas_futuras_por_telefono: 3
+  max_reservas_por_llamada: 2
+  antelacion_minima_min: 60
+  antelacion_minima_anulacion_min: 120
+  max_duracion_llamada_s: 420
+  rate_limit_peticiones_min: 60

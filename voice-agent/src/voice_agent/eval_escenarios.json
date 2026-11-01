@@ -1,0 +1,254 @@
+{
+  "_nota": "Banco de conversaciones para python -m voice_agent.eval. Cliente por guion (sin LLM), middleware FALSO, datos ficticios. 'hoy' es hora de Madrid. Fechas en comprobaciones: $hoy, $manana, $lunes…$domingo (el próximo con ese nombre). Ver eval.py para el significado de cada comprobación.",
+  "por_defecto": {
+    "hoy": "2026-10-06T10:00",
+    "datos": ["Prueba Uno Simulado, seis cero cero, uno dos tres, cuatro cinco seis"],
+    "confirmaciones": ["Sí"],
+    "algo_mas": ["No, gracias"],
+    "max_turnos": 14,
+    "comprobaciones_globales": {
+      "frases_prohibidas": ["sigues ahi"],
+      "inicios_prohibidos": ["perfecto", "genial", "claro", "vale", "entendido", "muy bien"],
+      "fechas_no_pasadas": true
+    }
+  },
+  "escenarios": [
+    {
+      "id": "C1",
+      "titulo": "Reserva normal: servicio, día, franja, hora, datos, sí",
+      "pasos": ["Hola, quería cita para corte de pelo", "El jueves", "Por la tarde", "La primera"],
+      "comprobaciones": {
+        "reservas": 1,
+        "cuelga": true,
+        "debe_llamar": [
+          {"tool": "disponibilidad", "action": "discover", "args": {"service_id": 1, "date": "$jueves", "time_period": "afternoon"}},
+          {"tool": "disponibilidad", "action": "lock", "args": {"option_index": 1}}
+        ],
+        "frases": [
+          "¿Me dices tu nombre, apellidos y un teléfono de contacto?",
+          "¿Confirmas que quieres reservar esta cita con estos datos o prefieres que mire otro profesional?",
+          "Listo"
+        ]
+      }
+    },
+    {
+      "id": "C2",
+      "titulo": "ADR-029 (1): otro profesional en el resumen y luego «mejor mañana a las doce»",
+      "pasos": ["Corte de pelo el jueves por la mañana", "La primera", "Mejor mañana a las doce", "Sí, esa"],
+      "confirmaciones": ["¿Puede ser otro profesional?", "Sí"],
+      "reacciones": [{"si": "con quien prefieres", "di": "$elige_nombrado", "una_vez": true}],
+      "agenda": {"libres": ["2026-10-07 12:00"]},
+      "comprobaciones": {
+        "reservas": 1,
+        "frases": ["con quién prefieres"],
+        "sin_herramienta_tras_cliente": ["otro profesional"],
+        "debe_llamar": [
+          {"tool": "disponibilidad", "action": "discover", "args": {"date": "$manana", "preferred_time": "12:00"}, "tiene": ["employee_id"]}
+        ],
+        "tras": {"si": {"tool": "disponibilidad", "tiene": ["employee_id"]},
+                 "todas": {"tool": "disponibilidad", "actions": ["discover", "scan"], "tiene": ["employee_id"]}}
+      }
+    },
+    {
+      "id": "C3",
+      "titulo": "ADR-029 (2): página de mañana y «¿y a las cuatro?»",
+      "pasos": ["Corte de pelo para el miércoles por la mañana", "¿Y a las cuatro?", "Sí, esa"],
+      "agenda": {"libres": ["2026-10-07 16:00"]},
+      "comprobaciones": {
+        "reservas": 1,
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"preferred_time": "16:00", "time_period": "afternoon"}}],
+        "reserva_en": {"time": "16:00"}
+      }
+    },
+    {
+      "id": "C4",
+      "titulo": "ADR-029 (5): «¿y a las doce y media?» sin afirmar antes de consultar",
+      "pasos": ["Corte de pelo para el miércoles por la mañana", "¿Y a las doce y media?", "Sí, esa"],
+      "agenda": {"libres": ["2026-10-07 12:30"]},
+      "comprobaciones": {
+        "reservas": 1,
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"preferred_time": "12:30"}}],
+        "reserva_en": {"time": "12:30"}
+      }
+    },
+    {
+      "id": "C5",
+      "titulo": "ADR-029 (3): pide hablar con una persona a la primera",
+      "pasos": ["Quiero hablar con una persona"],
+      "algo_mas": ["No, nada más"],
+      "comprobaciones": {
+        "reservas": 0,
+        "cuelga": true,
+        "no_debe_llamar": [{"tool": "disponibilidad"}, {"tool": "reserva"}],
+        "frases": ["Ahora mismo no puedo pasarte con nadie"],
+        "frases_prohibidas": ["aqui estoy yo"]
+      }
+    },
+    {
+      "id": "C6",
+      "titulo": "ADR-029 (4): «con Ola» es Olga",
+      "pasos": ["Corte de pelo con Ola, el miércoles por la tarde", "La primera"],
+      "comprobaciones": {
+        "reservas": 1,
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"employee_id": 2}}],
+        "frases": ["Olga"],
+        "frases_prohibidas": ["ola"]
+      }
+    },
+    {
+      "id": "C6b",
+      "titulo": "ADR-029 (4): nombre que no existe",
+      "pasos": ["Quiero corte de pelo con Marta el miércoles por la tarde", "Con Olga", "La primera"],
+      "comprobaciones": {
+        "frases": ["¿Con Bruno, con Olga o con Ramón?"],
+        "sin_herramienta_en_primer_turno": true,
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"employee_id": 2}}],
+        "frases_prohibidas": ["marta"]
+      }
+    },
+    {
+      "id": "C7",
+      "titulo": "ADR-028: llama por la tarde y pide «hoy por la mañana»",
+      "hoy": "2026-10-06T17:00",
+      "pasos": ["Barba para hoy por la mañana", "Sí, míramelo", "La primera"],
+      "comprobaciones": {
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"date": "$hoy"}}],
+        "frases_prohibidas": ["cerrad"],
+        "reservas_max": 1
+      }
+    },
+    {
+      "id": "C8",
+      "titulo": "Lunes cerrado sin herramienta; sábado abierto",
+      "pasos": ["Corte de pelo el lunes por la mañana", "Pues el sábado por la mañana", "La primera"],
+      "comprobaciones": {
+        "reservas": 1,
+        "sin_herramienta_en_primer_turno": true,
+        "frases": ["cerrad"],
+        "no_debe_llamar": [{"tool": "disponibilidad", "args": {"date": "$lunes"}}],
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"date": "$sabado"}}]
+      }
+    },
+    {
+      "id": "C9",
+      "titulo": "«A partir de las seis, me da igual el día» y luego «otro día»",
+      "pasos": ["Corte de pelo, me da igual el día, pero a partir de las seis", "No me viene bien ninguna, otro día", "La primera"],
+      "comprobaciones": {
+        "cuenta": [{"match": {"tool": "disponibilidad", "action": "scan", "args": {"after_time": "18:00"}}, "min": 2}],
+        "no_debe_llamar": [{"tool": "disponibilidad", "action": "discover"}],
+        "reservas_max": 1
+      }
+    },
+    {
+      "id": "C10",
+      "titulo": "Cita existente: cambiar la del viernes",
+      "pasos": ["Quiero cambiar mi cita del viernes"],
+      "algo_mas": ["No, nada más"],
+      "comprobaciones": {
+        "reservas": 0,
+        "cuelga": true,
+        "no_debe_llamar": [{"tool": "disponibilidad"}, {"tool": "reserva"}],
+        "frases": ["Los cambios y las cancelaciones los gestiona directamente la peluquería por WhatsApp"]
+      }
+    },
+    {
+      "id": "C11",
+      "titulo": "Segunda cita para el hijo con el mismo teléfono",
+      "pasos": ["Hola, corte de pelo", "El jueves", "Por la tarde", "La primera", "La primera"],
+      "datos": ["Prueba Uno Simulado, seis cero cero, uno dos tres, cuatro cinco seis", "Lucas Simulado, y sí, el mismo teléfono"],
+      "algo_mas": ["Sí, quiero otra cita para mi hijo, barba", "No, gracias"],
+      "comprobaciones": {
+        "reservas": 2,
+        "segunda_cita_misma_hora": true,
+        "frases": ["mismo teléfono"]
+      }
+    },
+    {
+      "id": "C12",
+      "titulo": "Fecha «el día 3» ya pasada este mes → mes siguiente",
+      "pasos": ["Corte de pelo para el día 3 por la mañana", "La primera"],
+      "comprobaciones": {
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"date": "2026-11-03"}}]
+      }
+    },
+    {
+      "id": "E1",
+      "titulo": "Hora concreta desde el principio",
+      "pasos": ["Corte y barba el viernes a las cinco y media", "Sí, esa"],
+      "agenda": {"libres": ["2026-10-09 17:30"]},
+      "comprobaciones": {
+        "reservas": 1,
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover",
+                         "args": {"service_id": 2, "date": "$viernes", "preferred_time": "17:30", "time_period": "afternoon"}}]
+      }
+    },
+    {
+      "id": "E2",
+      "titulo": "Varios días: «cuando tengas, me da igual el día»",
+      "pasos": ["Barba, cuando tengas hueco, me da igual el día", "La primera"],
+      "comprobaciones": {
+        "reservas_max": 1,
+        "debe_llamar": [{"tool": "disponibilidad", "action": "scan", "args": {"service_id": 0}}]
+      }
+    },
+    {
+      "id": "E3",
+      "titulo": "Falta la franja: pregunta mañana o tarde antes de consultar",
+      "pasos": ["Corte de pelo el jueves", "Por la tarde", "La primera"],
+      "comprobaciones": {
+        "sin_herramienta_en_primer_turno": true,
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"date": "$jueves", "time_period": "afternoon"}}]
+      }
+    },
+    {
+      "id": "E4",
+      "titulo": "Servicio dicho a su manera: pelo y barba = corte y barba",
+      "pasos": ["Quería cortarme el pelo y arreglarme también la barba", "El jueves por la mañana", "La primera"],
+      "comprobaciones": {
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"service_id": 2}}]
+      }
+    },
+    {
+      "id": "E5",
+      "titulo": "Cambia de idea: del miércoles por la mañana al jueves por la tarde",
+      "pasos": ["Corte de pelo el miércoles por la mañana", "Uy, mejor el jueves por la tarde", "La primera"],
+      "comprobaciones": {
+        "reservas": 1,
+        "debe_llamar": [{"tool": "disponibilidad", "action": "discover", "args": {"date": "$jueves", "time_period": "afternoon"}}],
+        "reserva_en": {"date": "$jueves"}
+      }
+    },
+    {
+      "id": "E6",
+      "titulo": "Teléfono mal dicho: nunca reserva con un teléfono no válido",
+      "pasos": ["Corte de pelo el jueves por la tarde", "La primera"],
+      "datos": ["Ana Simulada, mi teléfono es el doce", "Perdona, es el seis cero cero, uno dos tres, cuatro cinco seis"],
+      "comprobaciones": {
+        "reservas": 1,
+        "reservas_con_telefono_valido": true
+      }
+    },
+    {
+      "id": "E7",
+      "titulo": "Hueco ocupado al crear: nueva consulta y otra hora",
+      "pasos": ["Corte de pelo el jueves por la tarde", "La primera", "La primera"],
+      "agenda": {"fallos": {"book": ["slot_taken"]}},
+      "comprobaciones": {
+        "reservas": 1,
+        "tras_debe": {"si": {"tool": "reserva", "outcome": "slot_taken"}, "debe": {"tool": "disponibilidad", "action": "discover"}}
+      }
+    },
+    {
+      "id": "E8",
+      "titulo": "Middleware caído: un reintento y WhatsApp",
+      "pasos": ["Corte de pelo el jueves por la tarde", "Sí, inténtalo otra vez"],
+      "algo_mas": ["No, gracias"],
+      "agenda": {"fallos": {"availability": ["agenda_unavailable", "agenda_unavailable", "agenda_unavailable"]}},
+      "comprobaciones": {
+        "reservas": 0,
+        "cuenta": [{"match": {"tool": "disponibilidad"}, "max": 2}],
+        "frases": ["Lo siento, ahora mismo no he podido resolverlo"]
+      }
+    }
+  ]
+}

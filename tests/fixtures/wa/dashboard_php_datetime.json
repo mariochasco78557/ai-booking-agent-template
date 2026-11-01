@@ -1,0 +1,53 @@
+[
+  {
+    "id": 101,
+    "reservationDate": {
+      "date": "2026-10-07 10:30:00.000000",
+      "timezone_type": 3,
+      "timezone": "Europe/Madrid"
+    },
+    "ownerName": "Ana",
+    "ownerSurnames": "Prueba Uno",
+    "ownerPhone": "600000001",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno ",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 102,
+    "reservationDate": {
+      "date": "2026-10-08 17:00:00.000000",
+      "timezone_type": 3,
+      "timezone": "Europe/Madrid"
+    },
+    "ownerName": "Beto",
+    "ownerSurnames": "Prueba Dos",
+    "ownerPhone": "600000002",
+    "typeReservation": 0,
+    "employee": {
+      "id": 1,
+      "name": "bruno ",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 103,
+    "reservationDate": {
+      "date": "2026-12-01 09:00:00.000000",
+      "timezone_type": 3,
+      "timezone": "Europe/Madrid"
+    },
+    "ownerName": "Ana",
+    "ownerSurnames": "Prueba Uno",
+    "ownerPhone": "600000001",
+    "typeReservation": 2,
+    "employee": {
+      "id": 41,
+      "name": "Marcos",
+      "surnames": "Sintetico"
+    }
+  }
+]

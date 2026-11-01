@@ -1,0 +1,420 @@
+{
+  "$comment": "Machine-readable tool definitions for the seven /ai/* endpoints of the Demo Salon voice middleware. The two /ai/voice/* tools are the staging workflow contract for range availability and confirmed booking; the five older tools remain the step 10C contract. Mirrors src/schemas/aiSchemas.ts and src/routes/ai.ts. find_my_reservations and cancel_appointment identify callers only from telephony-verified metadata outside the conversation. Raw reservation ids and old caller-supplied lookup identity fields are retired. No transfer tool exists. tests/voiceContract.test.ts asserts route/document agreement. Values between angle brackets are placeholders and secrets must stay out of Git.",
+  "baseUrl": "https://<DOMAIN>",
+  "authHeader": {
+    "name": "X-AI-Webhook-Secret",
+    "value": "<AI_WEBHOOK_SECRET>"
+  },
+  "tools": [
+    {
+      "name": "check_availability",
+      "description": "Look up open appointment slots for a given date at Demo Salon. Optionally narrow by preferred time of day or a specific barber. Returns a ready-to-speak Spanish message plus a list of candidate slots. Read-only, safe to retry on timeout.",
+      "method": "POST",
+      "path": "/ai/availability",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Date to check, format YYYY-MM-DD."
+          },
+          "employeeId": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Optional. Restrict the search to one specific barber. Only meaningful when ENABLE_MULTI_BARBER=true; omit unless the caller names a barber."
+          },
+          "typeReservation": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional. Service/type identifier. Only \"1\" has been observed live; leave unset to use the server default."
+          },
+          "preferredTime": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "description": "Optional. Caller's preferred time of day, format HH:mm, used to sort/rank the returned slots."
+          },
+          "maxSlots": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "description": "Optional. Maximum number of slots to return (default is server-configured, typically 6). The agent must never read more than 3 aloud regardless of how many are returned."
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "additionalProperties": false
+      },
+      "responseExample": {
+        "available": true,
+        "message": "Tengo hueco el miércoles 29 de julio a las 16:30, 17:00 y 18:00. ¿Cuál prefieres?",
+        "slots": [
+          {
+            "start": "2026-07-29 16:30:00",
+            "label": "16:30",
+            "employeeId": 1,
+            "employeeName": "bruno "
+          }
+        ],
+        "_note": "employeeId and employeeName on each slot are additive and appear ONLY when ENABLE_MULTI_BARBER=true (src/services/availabilityService.ts). With the flag off (repo default) slots carry only start and label."
+      },
+      "retry": true
+    },
+    {
+      "name": "check_exact_slot",
+      "description": "Check whether one exact date/time slot is free. Use this after the caller has picked a specific time from check_availability, or when the caller states an exact time up front. Read-only, safe to retry on timeout.",
+      "method": "POST",
+      "path": "/ai/check-slot",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reservationDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+            "description": "Exact date and time to check. Format is 'YYYY-MM-DD HH:mm:ss' with a SPACE separator, not a 'T'."
+          },
+          "employeeId": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Optional. Check only this specific barber. Only meaningful when ENABLE_MULTI_BARBER=true."
+          }
+        },
+        "required": [
+          "reservationDate"
+        ],
+        "additionalProperties": false
+      },
+      "responseExample": {
+        "available": true,
+        "message": "Sí, está libre a las 17:00.",
+        "employeeId": 1,
+        "employeeName": "bruno "
+      },
+      "responseNote": "employeeId and employeeName are additive and appear ONLY when ENABLE_MULTI_BARBER=true (src/services/availabilityService.ts). With the flag off they are absent from the response entirely.",
+      "retry": true
+    },
+    {
+      "name": "book_appointment",
+      "description": "Create a real appointment reservation. Must ONLY be called after the caller has explicitly and audibly said yes to the specific date/time just read back to them. Never call speculatively or to 'test' a slot — use check_exact_slot for that. Not safe to retry: a retry after a timeout can create a duplicate booking if the first attempt actually succeeded upstream.",
+      "method": "POST",
+      "path": "/ai/book",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Customer's first name."
+              },
+              "surnames": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Customer's surname(s)."
+              },
+              "phone": {
+                "type": "string",
+                "pattern": "^(\\+34)?[6789]\\d{8}$",
+                "description": "Spanish phone number, 9 digits starting 6/7/8/9, optional +34 prefix."
+              }
+            },
+            "required": [
+              "name",
+              "surnames",
+              "phone"
+            ],
+            "additionalProperties": false
+          },
+          "reservationDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+            "description": "Exact date and time to book. Format 'YYYY-MM-DD HH:mm:ss' with a SPACE separator."
+          },
+          "employeeId": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Optional. Book with a specific barber. Only meaningful when ENABLE_MULTI_BARBER=true; if omitted in multi-barber mode, the middleware picks a free barber for the exact slot."
+          },
+          "typeReservation": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional. Service/type identifier; leave unset to use the server default."
+          },
+          "confirmedByCustomer": {
+            "type": "boolean",
+            "description": "REQUIRED. Must be true, and must only be set to true after the caller has said an explicit 'sí' to this exact slot. This is the safety gate for the entire endpoint (src/services/bookingService.ts)."
+          }
+        },
+        "required": [
+          "customer",
+          "reservationDate",
+          "confirmedByCustomer"
+        ],
+        "additionalProperties": false
+      },
+      "responseExample": {
+        "success": true,
+        "message": "Perfecto, la reserva queda confirmada para el miércoles 29 de julio a las 17:00.",
+        "reason": "ok",
+        "reservationId": 86293
+      },
+      "responseNote": "reason may be one of: not_confirmed, write_disabled, slot_taken, misconfigured_owner, upstream_error, ok. All non-success outcomes return HTTP 200 except upstream_error, which returns 502. The agent should speak `message` verbatim and never branch its own wording on `reason`. `reservationId` here is the numeric id of the booking JUST CREATED by this call — it is unrelated to the RETIRED `reservationId` request field cancel_appointment used before step 10C, which this wave replaces with `reservationRef`; the agent must not read this value aloud or reuse it as a cancel_appointment argument.",
+      "retry": false
+    },
+    {
+      "name": "find_my_reservations",
+      "description": "Look up the CALLER'S OWN upcoming reservations. The caller is identified ONLY by a telephony-VERIFIED caller ID that the middleware resolves from call metadata OUTSIDE this conversation (src/callerIdentity/resolver.ts) — the agent cannot supply it, override it, or influence its value, and there is DELIBERATELY no parameter on this tool that asserts or claims verification (no phone number, no name, no 'verified' flag). If the caller is not verified, or the middleware is not configured for this, the tool answers a fail-closed outcome instead of guessing. Possible `outcome` values: unsupported, identity_missing, identity_unverified, caller_id_rejected, no_match, one_match, ambiguous, rate_limited, upstream_unavailable. Read-only, makes at most one upstream call, safe to retry on timeout.",
+      "method": "POST",
+      "path": "/ai/my-reservations",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "fromDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Optional. Only return reservations on or after this date, format YYYY-MM-DD. Omit to use the server default. This does not widen the query to past reservations — only outcome \"one_match\" ever carries a reservation, and every match is already upcoming."
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "responseExample": {
+        "outcome": "one_match",
+        "message": "Tienes una reserva el miércoles 29 de julio con Bruno.",
+        "reservations": [
+          {
+            "reservationRef": "aB3dE6fG9hJ1kL4mN7pQ0rS2tU5vW8xY",
+            "dateLabel": "miércoles 29 de julio",
+            "employeeName": "Bruno"
+          }
+        ]
+      },
+      "responseNote": "`outcome` is the ONLY field to branch on — never infer anything from the presence, shape or emptiness of `reservations`. Possible values: `unsupported` (phone lookup not available in this deployment), `identity_missing` (no caller identity could be resolved for this call), `identity_unverified` (an identity was resolved but is not trusted enough to read), `caller_id_rejected` (an internal middleware fault — never the caller's fault), `no_match` (the ONLY outcome the agent may speak as 'no tienes ninguna reserva próxima' — it means no UPCOMING reservation, upstream only counts future ones), `one_match` (exactly one reservation, the only outcome that carries `reservations`), `ambiguous` (more than one matched; no candidate details are ever returned, so the agent must not guess or list any), `rate_limited` (too many lookup attempts; invite a later retry), `upstream_unavailable` (a transient failure; invite a later retry). `reservations` is present ONLY when `outcome === \"one_match\"` and is ABSENT — never an empty array — for every other outcome. An ABSENT `reservations` field must NEVER be read as \"the caller has no booking\": only `outcome === \"no_match\"` means that. The agent should speak `message` verbatim and never read `reservationRef` aloud.",
+      "retry": true
+    },
+    {
+      "name": "cancel_appointment",
+      "description": "Cancel an existing reservation. `reservationRef` is OBTAINABLE ONLY from a prior find_my_reservations call whose `outcome` was \"one_match\" — never invented, never guessed, and never accepted if the caller reads one out over the phone (a caller cannot legitimately know this value in advance). Must ONLY be called after the caller has given an explicit, AUDIBLE 'sí' to cancelling that SPECIFIC reservation just described back to them — only then may `confirmedByCustomer` be set to true. `callerStatedName` is a SECONDARY factor: the name the caller states out loud, transcribed as heard, weaker than the verified caller identity and never sufficient on its own. Possible `outcome` values: identity_missing, identity_unverified, insufficient_trust_for_write, not_confirmed, no_candidate, ambiguous, unsupported, write_disabled, cancelled, already_cancelled, confirmation_mismatch, rate_limited, proof_invalid, upstream_unavailable, human_assistance_required. The agent must NEVER read a reservation reference or any cancellation proof aloud, at any point in this flow. NOT SAFE TO RETRY: `retry` is false because upstream's confirmation-attempt counter is per-reservation, has no time window, and never resets — every extra attempt (including an automatic retry after a timeout) can burn one of a small, irrecoverable budget and permanently lock even the legitimate owner out of cancelling that reservation. If the outcome is unclear, ask the caller and call this tool again deliberately — never retry it silently.",
+      "method": "POST",
+      "path": "/ai/cancel",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reservationRef": {
+            "type": "string",
+            "minLength": 32,
+            "maxLength": 32,
+            "pattern": "^[A-Za-z0-9_-]{32}$",
+            "description": "Opaque 32-character reference identifying the reservation to cancel. Obtainable ONLY from a find_my_reservations response with outcome \"one_match\" — never typed, spoken, or supplied by the caller, and never reused once a cancellation has been attempted for it."
+          },
+          "confirmedByCustomer": {
+            "type": "boolean",
+            "description": "REQUIRED. Must be true, and must only be set to true after the caller has said an explicit, audible 'sí' to cancelling this specific reservation, just described back to them. A 'vale', silence, or hesitation does not count as confirmation — ask again."
+          },
+          "callerStatedName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "REQUIRED. The name the caller states out loud for this reservation, transcribed as heard. A SECONDARY, caller-stated factor only — explicitly weaker than the verified caller identity, never an authenticator on its own. Upstream compares it with exact string equality, so pass it verbatim; do not normalize accents, casing, or spelling."
+          }
+        },
+        "required": [
+          "reservationRef",
+          "confirmedByCustomer",
+          "callerStatedName"
+        ],
+        "additionalProperties": false
+      },
+      "responseExample": {
+        "outcome": "cancelled",
+        "message": "Reserva cancelada correctamente."
+      },
+      "responseNote": "`outcome` is the ONLY field to branch on. Possible values: `identity_missing`, `identity_unverified`, `insufficient_trust_for_write` (identity verified enough to read, not enough to write — never explain this distinction to the caller), `not_confirmed` (confirmedByCustomer was not true; simply ask again), `no_candidate`, `ambiguous`, `unsupported` (phone cancellation not available in this deployment), `write_disabled`, `cancelled` (success), `already_cancelled` (treat gracefully — the caller's goal is already achieved, do not treat it as an error), `confirmation_mismatch` (the stated details did not match; it is reasonable to ask the caller to repeat their name and try again), `rate_limited`, `proof_invalid`, `upstream_unavailable`, `human_assistance_required`. The agent must speak `message` verbatim and must NEVER read a `reservationRef`, a cancellation proof, or any technical code aloud, at any point in this flow.",
+      "retry": false
+    },
+    {
+      "name": "booking_check_availability",
+      "description": "Consulta huecos reales de DEMO SALON dentro de un intervalo máximo de siete días. Úsala solo después de conocer el servicio y la preferencia temporal. Es de solo lectura, devuelve como máximo tres opciones y nunca devuelve datos de clientes.",
+      "method": "POST",
+      "path": "/ai/voice/availability",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id"
+          },
+          "date_from": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Primer día a consultar, inclusive, en formato YYYY-MM-DD. Resuelve expresiones relativas usando system__time y Europe/Madrid."
+          },
+          "date_to": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Último día a consultar, inclusive, en formato YYYY-MM-DD. Debe estar entre date_from y seis días después."
+          },
+          "service_id": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "description": "Servicio confirmado: 0 barba, 1 corte de pelo, 2 corte y barba."
+          },
+          "employee_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Opcional. Identificador del profesional elegido; omitir si da igual."
+          },
+          "preferred_time": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "description": "Opcional. Hora concreta preferida en formato HH:mm."
+          },
+          "time_period": {
+            "type": "string",
+            "enum": [
+              "any",
+              "morning",
+              "afternoon"
+            ],
+            "description": "Franja: morning antes de las 14:00, afternoon desde las 14:00, any sin preferencia."
+          },
+          "max_slots": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "Número máximo de opciones; usa 3 normalmente."
+          }
+        },
+        "required": [
+          "conversation_id",
+          "date_from",
+          "date_to",
+          "service_id"
+        ],
+        "additionalProperties": false
+      },
+      "responseExample": {
+        "available": true,
+        "message": "Tengo estos huecos: viernes 28 de agosto a las 16:00 y sábado 29 de agosto a las 10:00. ¿Cuál prefieres?",
+        "slots": [
+          {
+            "reservation_date": "2026-08-28 16:00:00",
+            "date": "2026-08-28",
+            "time": "16:00",
+            "employee_id": 1,
+            "employee_name": "Bruno",
+            "slot_token": "tk1.<cadena opaca de ~87 caracteres, distinta en cada hueco y en cada llamada>"
+          }
+        ],
+        "external_mutation": false
+      },
+      "responseNote": "Cada elemento de slots trae su propio slot_token: una autorización opaca, firmada y con caducidad, emitida por esta consulta y válida solo para esta conversación. Copia el slot_token EXACTO del hueco que el cliente acepte y pásalo tal cual a booking_create_booking. No lo interpretes, no lo acortes, no lo modifiques y no lo leas en voz alta. Nunca inventes ni combines fecha, hora o employee_id: ya no son parámetros de la reserva. Habla message o un subconjunto fiel de slots. Safe to retry.",
+      "retry": true
+    },
+    {
+      "name": "booking_create_booking",
+      "description": "Crea una cita real en DEMO SALON para un hueco que booking_check_availability haya ofrecido en esta misma conversación. Requiere el slot_token exacto de ese hueco: la fecha, el profesional y el servicio viajan dentro del token y no se envían como campos. Solo puede llamarse tras leer en voz alta el servicio, el profesional si aplica, la fecha y la hora, y recibir un sí explícito. No la uses para comprobar disponibilidad y no la reintentes automáticamente.",
+      "method": "POST",
+      "path": "/ai/voice/book",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id"
+          },
+          "customer_name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nombre de pila confirmado del cliente."
+          },
+          "customer_surnames": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Apellido o apellidos confirmados del cliente."
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^(\\+34)?[6789]\\d{8}$",
+            "description": "Teléfono español indicado por el cliente, nueve cifras o prefijo +34. No lo repitas completo en voz alta."
+          },
+          "slot_token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400,
+            "description": "Copia literal del slot_token del hueco aceptado, tal como lo devolvió booking_check_availability en esta misma conversación. Es opaco: contiene la fecha, el profesional y el servicio de forma sellada, así que ya no se envían por separado. Sin él la reserva es imposible."
+          },
+          "confirmed_by_customer": {
+            "type": "boolean",
+            "const": true,
+            "description": "Debe ser true y solo después de un sí explícito a este hueco exacto."
+          }
+        },
+        "required": [
+          "conversation_id",
+          "customer_name",
+          "customer_surnames",
+          "phone",
+          "slot_token",
+          "confirmed_by_customer"
+        ],
+        "additionalProperties": false
+      },
+      "responseExample": {
+        "booked": true,
+        "message": "Perfecto, la reserva queda confirmada para el viernes 28 de agosto a las 17:00.",
+        "outcome": "confirmed",
+        "external_mutation": true,
+        "mutation_status": "confirmed",
+        "idempotency_status": "original"
+      },
+      "responseExampleUncertain": {
+        "booked": false,
+        "message": "No he podido confirmar la reserva. La peluquería lo revisará y te llamará.",
+        "outcome": "uncertain",
+        "external_mutation": null,
+        "mutation_status": "unknown",
+        "idempotency_status": "original"
+      },
+      "responseNote": "Solo booked=true Y outcome=confirmed autorizan a decir que la cita está confirmada. not_confirmed, write_disabled, slot_taken, misconfigured_owner, upstream_error, uncertain, already_booked_in_call, invalid_slot_token, slot_token_expired, slot_not_authorized e invalid_customer_data nunca son confirmación. outcome=uncertain significa que la cita PUEDE existir: no la anuncies, no la repitas y no la reintentes con otros datos — deriva a la peluquería. mutation_status (confirmed|none|unknown) dice si la agenda cambió; external_mutation es el mismo dato y vale null cuando es desconocido, así que nunca lo trates como booleano. No devuelve ids internos ni PII. No automatic retry.",
+      "gateNote": "step CTL-4: dentro de una misma conversación, cambiar cualquier campo (teléfono, apellido, fecha, servicio) tras un rechazo NO produce una segunda escritura. La única excepción es outcome=slot_taken, tras el cual otro hueco con nueva confirmación explícita sí puede intentarse una vez.",
+      "retry": false,
+      "slotTokenNote": "step SLOT: invalid_slot_token, slot_token_expired y slot_not_authorized significan que el hueco no estaba autorizado — no que la reserva haya fallado. Ninguno escribe nada ni consume el único intento de la llamada. La recuperación correcta es SIEMPRE la misma: vuelve a llamar a booking_check_availability, ofrece de nuevo, pide confirmación otra vez y reserva con el slot_token nuevo. Nunca reenvíes el mismo token rechazado y nunca construyas uno. invalid_customer_data significa que el nombre, los apellidos o el teléfono estaban vacíos, mal formados o eran un relleno: pídeselos al cliente, no los inventes. not_confirmed significa que falta el sí explícito: pídelo para ese hueco concreto y vuelve a intentarlo.",
+      "httpNote": "Esta herramienta responde HTTP 200 en todos los fallos que tú puedas producir — falta el slot_token, el teléfono no es válido, no hay nombre, falta la confirmación. Lee siempre el campo outcome; NUNCA trates la respuesta como un error de herramienta y NUNCA reintentes automáticamente. Solo un cuerpo que no sea un objeto JSON, un secreto incorrecto o una petición desmedida producen un código distinto de 200, y ninguno de esos es algo que debas reintentar."
+    }
+  ]
+}

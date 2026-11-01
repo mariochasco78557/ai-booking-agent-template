@@ -1,0 +1,41 @@
+[
+  {
+    "id": 101,
+    "reservationDate": "2026-10-07 10:30:00",
+    "ownerName": "Ana",
+    "ownerSurnames": "Prueba Uno",
+    "ownerPhone": "600000001",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno ",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 102,
+    "reservationDate": "2026-10-08 17:00:00",
+    "ownerName": "Beto",
+    "ownerSurnames": "Prueba Dos",
+    "ownerPhone": "600000002",
+    "typeReservation": 0,
+    "employee": {
+      "id": 1,
+      "name": "bruno ",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 103,
+    "reservationDate": "2026-12-01 09:00:00",
+    "ownerName": "Ana",
+    "ownerSurnames": "Prueba Uno",
+    "ownerPhone": "600000001",
+    "typeReservation": 2,
+    "employee": {
+      "id": 41,
+      "name": "Marcos",
+      "surnames": "Sintetico"
+    }
+  }
+]

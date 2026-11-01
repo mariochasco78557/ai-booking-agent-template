@@ -1,0 +1,76 @@
+{
+  "$comment": "Recado para Bruno (internal doc, not included in the template). Herramienta webhook nueva del agente de voz V7.",
+  "baseUrl": "https://api.booking.example.com",
+  "authHeader": {
+    "name": "X-AI-Webhook-Secret",
+    "value": "<AI_WEBHOOK_SECRET>"
+  },
+  "tools": [
+    {
+      "name": "booking_recado_para_owner",
+      "description": "Leave a message for Bruno, the owner, who gets it on his phone. Use it ONLY as RECADO PARA BRUNO says: the customer wants to speak to Bruno or a person, will arrive late, complains, or asks something that is not booking, checking, cancelling or changing an appointment. One per call. Read the answer's message word for word.",
+      "method": "POST",
+      "path": "/ai/voice/v2/recado",
+      "response_timeout_secs": 10,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "description": "Bind to the system__conversation_id dynamic variable."
+          },
+          "caller_phone": {
+            "type": "string",
+            "description": "Bind to the system__caller_id dynamic variable. Never filled by the LLM."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "late",
+              "wants_human",
+              "complaint",
+              "question"
+            ],
+            "description": "late: will arrive late. wants_human: wants to speak to Bruno or a person. complaint: a complaint. question: anything else that is not an appointment."
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "In Spanish, what the customer wants Bruno to know, in their own words, one or two sentences. Never invent it."
+          },
+          "minutes_late": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 240,
+            "description": "kind late only, and only if the customer said how many minutes."
+          },
+          "customer_name": {
+            "type": "string",
+            "maxLength": 80,
+            "description": "The customer's name if they said it in this call. Never invent it."
+          },
+          "dictated_phone": {
+            "type": "string",
+            "maxLength": 20,
+            "description": "Only after phone_needed or dictated_invalid: the phone the customer dictated, digits only."
+          }
+        },
+        "required": [
+          "conversation_id",
+          "kind",
+          "summary"
+        ]
+      },
+      "outcomes": {
+        "recado_queued": "read message",
+        "recado_duplicate": "read message",
+        "recado_limit": "read message",
+        "recado_dry_run": "read message (WhatsApp sentence)",
+        "recado_unavailable": "read message (WhatsApp sentence)",
+        "phone_needed": "read message (it is a question), wait, call again with dictated_phone and customer_name",
+        "dictated_invalid": "read message (it is a question), wait, call again with dictated_phone",
+        "invalid_request": "the persona WhatsApp sentence"
+      }
+    }
+  ]
+}

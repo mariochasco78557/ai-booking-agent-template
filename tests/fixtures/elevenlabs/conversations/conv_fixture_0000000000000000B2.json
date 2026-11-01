@@ -1,0 +1,241 @@
+{
+  "conversation_id": "conv_fixture_0000000000000000B2",
+  "agent_id": "agent_fixture_demo_salon_0001",
+  "agent_name": "DEMO SALON (fixture)",
+  "status": "done",
+  "has_audio": true,
+  "has_user_audio": true,
+  "has_response_audio": true,
+  "has_auxiliary_audio": false,
+  "transcript": [
+    {
+      "role": "agent",
+      "time_in_call_secs": 0.0,
+      "message": "Peluquería DEMO SALON, dime.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.58
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 5.1,
+      "message": "¿Tenéis hueco el viernes?",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 9.3,
+      "message": "Miro el viernes.",
+      "tool_calls": [
+        {
+          "request_id": "req_b1",
+          "tool_name": "balanced_availability",
+          "params_as_json": "{\"action\": \"discover\", \"service_id\": 1, \"date\": \"2026-09-12\", \"time_period\": \"cualquiera\", \"conversation_id\": \"conv_fixture_0000000000000000B2\"}",
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ],
+      "tool_results": [
+        {
+          "request_id": "req_b1",
+          "tool_name": "balanced_availability",
+          "result_value": "{\"status\": 200, \"outcome\": \"options\", \"options\": 2}",
+          "is_error": false,
+          "tool_has_been_called": true,
+          "type": "webhook",
+          "is_blocked": false,
+          "tool_latency_secs": 0.9,
+          "error_type": "",
+          "raw_error_message": "",
+          "dynamic_variable_updates": []
+        }
+      ],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 1.21
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 20.4,
+      "message": "¿Y por la tarde?",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 24.7,
+      "message": "Miro la tarde.",
+      "tool_calls": [
+        {
+          "request_id": "req_b2",
+          "tool_name": "balanced_availability",
+          "params_as_json": "{\"action\": \"discover\", \"service_id\": 1, \"date\": \"2026-09-12\", \"time_period\": \"tarde\", \"conversation_id\": \"conv_fixture_0000000000000000B2\"}",
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ],
+      "tool_results": [
+        {
+          "request_id": "req_b2",
+          "tool_name": "balanced_availability",
+          "result_value": "{\"status\": 200, \"outcome\": \"options\", \"options\": 1}",
+          "is_error": false,
+          "tool_has_been_called": true,
+          "type": "webhook",
+          "is_blocked": false,
+          "tool_latency_secs": 0.02,
+          "error_type": "",
+          "raw_error_message": "",
+          "dynamic_variable_updates": []
+        }
+      ],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 4.05
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 35.2,
+      "message": "¿Y el jueves de la semana que viene?",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 39.6,
+      "message": "Un segundo.",
+      "tool_calls": [
+        {
+          "request_id": "req_b3",
+          "tool_name": "balanced_availability",
+          "params_as_json": "{\"action\": \"discover\", \"service_id\": 1, \"date\": \"2026-09-18\", \"time_period\": \"cualquiera\", \"conversation_id\": \"conv_fixture_0000000000000000B2\"}",
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ],
+      "tool_results": [
+        {
+          "request_id": "req_b3",
+          "tool_name": "balanced_availability",
+          "result_value": "{\"status\": 504, \"outcome\": \"error\"}",
+          "is_error": true,
+          "tool_has_been_called": true,
+          "type": "webhook",
+          "is_blocked": false,
+          "tool_latency_secs": 8.02,
+          "error_type": "",
+          "raw_error_message": "Tool call timed out after 8.0s while calling upstream (xi-api-key: sk_test_FAKE); caller +34600000123",
+          "dynamic_variable_updates": []
+        }
+      ],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_transcription_service_ttf": {
+            "elapsed_time": 0.33
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 49.9,
+      "message": "Perdona, no he podido consultarlo. ¿Te llamo luego?",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.7
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 54.0,
+      "message": "Nada, ya llamo yo.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    }
+  ],
+  "metadata": {
+    "start_time_unix_secs": 1789137372,
+    "call_duration_secs": 58,
+    "cost_fiat": 0.05,
+    "cost": 430,
+    "termination_reason": "user_hangup",
+    "phone_call": {
+      "direction": "inbound",
+      "type": "twilio",
+      "external_number": "+34600000123",
+      "agent_number": "+34900000000"
+    },
+    "main_language": "es"
+  },
+  "analysis": {
+    "call_successful": "failure",
+    "transcript_summary": "Tres consultas de disponibilidad, la tercera falla por timeout; el cliente cuelga sin reservar.",
+    "evaluation_criteria_results": {
+      "reserva_completada": {
+        "result": "failure",
+        "rationale": "No se llegó a bloquear ningún hueco."
+      }
+    },
+    "data_collection_results": {}
+  },
+  "conversation_initiation_client_data": {
+    "dynamic_variables": {}
+  }
+}

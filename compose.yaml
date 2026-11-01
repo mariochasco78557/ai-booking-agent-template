@@ -1,0 +1,32 @@
+# One container per client. Put it behind your own TLS reverse proxy (Caddy, nginx, Traefik).
+services:
+  booking-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: "${APP_VERSION:-dev}"
+    image: ai-booking-agent:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    volumes:
+      - booking-state:/var/lib/booking-agent
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+volumes:
+  booking-state:

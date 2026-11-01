@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:demo-salon:call-interruption-mvp:pilot-event:1",
+  "title": "Demo Salon call interruption MVP pilot event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "occurredAt", "callIdHash", "scenarioId", "eventName"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "eventId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{8,64}$" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "callIdHash": { "type": "string", "pattern": "^[a-f0-9]{64}$", "description": "SHA-256 con sal del piloto sobre un identificador aleatorio de alta entropía; nunca el identificador crudo." },
+    "scenarioId": { "type": "string", "pattern": "^A[0-9]{2}[-a-z0-9]+$" },
+    "eventName": { "enum": ["CALL_STARTED", "INTENT_CLASSIFIED", "STATE_TRANSITION", "OUTCOME_EMITTED", "CALLBACK_REQUESTED", "STAFF_INTERRUPTION_RECORDED", "TECHNICAL_FAILURE", "CALL_ENDED"] },
+    "fromState": { "type": "string" },
+    "toState": { "type": "string" },
+    "intent": { "enum": ["BOOK", "CHECK_AVAILABILITY", "HUMAN_HELP", "CANCEL", "RESCHEDULE", "ASK_PRICE", "OTHER"] },
+    "outcome": { "enum": ["RESUELVE", "DERIVA", "RECHAZA"] },
+    "reasonCode": { "enum": ["BOOKING_CONFIRMED", "AVAILABILITY_PROVIDED", "CUSTOMER_REQUESTS_HUMAN", "CANCEL_OR_CHANGE_NOT_ENABLED", "BUSINESS_DATA_NOT_APPROVED", "SLOT_OUTSIDE_SYNTHETIC_SCHEDULE", "SERVICE_NOT_CONFIRMED", "TECHNICAL_FAILURE", "INTENT_NOT_UNDERSTOOD", "SECURITY_OR_PRIVACY_BOUNDARY"] },
+    "announcesSuccess": { "type": "boolean" },
+    "latencyMs": { "type": "integer", "minimum": 0, "description": "NO SE RECOGE en la demo local: este motor no emite el campo, porque no tiene transporte ni reloj real y cualquier valor sintetico se leeria como latencia medida. Sigue siendo OPCIONAL (no aparece en required), asi que un transporte real futuro puede poblarlo sin romper este contrato v1. Frontera de medicion definida en PILOT_METRICS.md: de fin de habla del cliente (STT final, reloj de la pasarela) al primer byte de audio de la respuesta." },
+    "synthetic": { "const": true }
+  },
+  "dependentRequired": {
+    "outcome": ["reasonCode"],
+    "reasonCode": ["outcome"]
+  },
+  "$defs": {
+    "outcomeReasonPairs": {
+      "oneOf": [
+        {
+          "properties": {
+            "outcome": { "const": "RESUELVE" },
+            "reasonCode": { "enum": ["BOOKING_CONFIRMED", "AVAILABILITY_PROVIDED"] }
+          },
+          "required": ["outcome", "reasonCode"]
+        },
+        {
+          "properties": {
+            "outcome": { "const": "DERIVA" },
+            "reasonCode": { "enum": ["CUSTOMER_REQUESTS_HUMAN", "CANCEL_OR_CHANGE_NOT_ENABLED", "BUSINESS_DATA_NOT_APPROVED", "SLOT_OUTSIDE_SYNTHETIC_SCHEDULE", "SERVICE_NOT_CONFIRMED", "TECHNICAL_FAILURE", "INTENT_NOT_UNDERSTOOD"] }
+          },
+          "required": ["outcome", "reasonCode"]
+        },
+        {
+          "properties": {
+            "outcome": { "const": "RECHAZA" },
+            "reasonCode": { "enum": ["SECURITY_OR_PRIVACY_BOUNDARY"] }
+          },
+          "required": ["outcome", "reasonCode"]
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": { "required": ["outcome", "reasonCode"] },
+      "then": { "$ref": "#/$defs/outcomeReasonPairs" }
+    },
+    {
+      "if": { "properties": { "eventName": { "const": "OUTCOME_EMITTED" } }, "required": ["eventName"] },
+      "then": { "required": ["outcome", "reasonCode", "announcesSuccess", "synthetic"] }
+    }
+  ]
+}

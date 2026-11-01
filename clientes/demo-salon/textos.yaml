@@ -1,0 +1,4 @@
+# Textos de Demo Salon que no caben en el texto genérico + marcadores (D-010).
+# Clave = la de src/core/texts/defaultTexts.es.ts; mismos marcadores que el texto por defecto.
+# El genérico es neutro («Hasta que la anule»); el de Demo Salon nombra a Bruno con «él» (literal de v0.3.0).
+"wa.anular_pendiente.avisado": "Le he pasado a {responsable} tu petición de anular la cita del {dia} a las {hora}. Hasta que él la anule, la cita sigue en pie."

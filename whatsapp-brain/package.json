@@ -1,0 +1,22 @@
+{
+  "name": "ai-booking-agent-whatsapp-brain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WhatsApp channel brain: talks to the customer, calls the booking middleware through typed tools.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "start": "node dist/main.js",
+    "sim": "node dist/sim.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4",
+    "vitest": "^3.2.4"
+  }
+}

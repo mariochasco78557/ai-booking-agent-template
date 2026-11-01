@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+!clientes/_plantilla/.env.example
+*.log
+.claude/
+.DS_Store
+coverage/
+.venv/
+__pycache__/
+*.pyc
+tools/call-engine-demo/.console.*

@@ -1,0 +1,139 @@
+[
+  {
+    "id": 201,
+    "reservationDate": "2026-10-09 10:00:00",
+    "ownerName": "Carla",
+    "ownerSurnames": "Sintetica",
+    "ownerPhone": "600 11 12 22",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 202,
+    "reservationDate": "2026-10-09 11:00:00",
+    "ownerName": "Dani",
+    "ownerSurnames": "Sintetico",
+    "ownerPhone": "+34 600-111-222",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 203,
+    "reservationDate": "2026-10-09 12:00:00",
+    "ownerName": "Eva",
+    "ownerSurnames": "Sintetica",
+    "ownerPhone": "llamar a Pepe",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 204,
+    "reservationDate": "2026-10-09 13:00:00",
+    "ownerName": "Fran",
+    "ownerSurnames": "Sintetico",
+    "ownerPhone": "",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 205,
+    "reservationDate": "2026-10-09 14:00:00",
+    "ownerName": "Gema",
+    "ownerSurnames": "Sintetica",
+    "ownerPhone": null,
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 206,
+    "reservationDate": "2026-10-09 15:00:00",
+    "ownerName": "Hugo",
+    "ownerSurnames": "Sintetico",
+    "ownerPhone": "600000011 / 600000012",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 207,
+    "reservationDate": "2026-10-09 16:00:00",
+    "ownerName": "Iris",
+    "ownerSurnames": "Sintetica",
+    "ownerPhone": "910000025",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "reservationDate": "2026-10-09 17:00:00",
+    "ownerPhone": "600000013"
+  },
+  {
+    "id": 0,
+    "reservationDate": "2026-10-09 17:30:00",
+    "ownerName": "Sin",
+    "ownerSurnames": "Id",
+    "ownerPhone": "600000014",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 208,
+    "reservationDate": "no es fecha",
+    "ownerName": "Sin",
+    "ownerSurnames": "Fecha",
+    "ownerPhone": "600000015",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  {
+    "id": 209,
+    "reservationDate": null,
+    "ownerName": "Sin",
+    "ownerSurnames": "Fecha2",
+    "ownerPhone": "600000016",
+    "typeReservation": 1,
+    "employee": {
+      "id": 1,
+      "name": "bruno",
+      "surnames": "Sintetico"
+    }
+  },
+  "basura",
+  null,
+  42
+]

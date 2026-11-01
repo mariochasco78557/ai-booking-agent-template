@@ -1,0 +1,44 @@
+{
+  "_nota": "Example prices; adjust per venue.",
+  "llm": {
+    "claude-haiku-4-5": {
+      "entrada_por_millon": 1.0,
+      "cache_escritura_5m_por_millon": 1.25,
+      "cache_lectura_por_millon": 0.1,
+      "salida_por_millon": 5.0,
+      "minimo_cacheable_tokens": 4096
+    }
+  },
+  "stt": {
+    "deepgram:nova-3": {
+      "por_minuto": 0.0077,
+      "estado": "a confirmar (posible promoción)"
+    },
+    "deepgram:flux-general-multi": {
+      "por_minuto": 0.0078,
+      "estado": "precio público de pago por uso (deepgram.com/pricing, 04/10/2026); Growth 0,0068"
+    },
+    "deepgram:flux-general-en": {
+      "por_minuto": 0.0065,
+      "estado": "precio público de pago por uso (04/10/2026)"
+    }
+  },
+  "tts": {
+    "azure": {
+      "por_millon_caracteres": 16.0,
+      "estado": "voces neural estándar, a confirmar"
+    },
+    "elevenlabs": {
+      "por_millon_caracteres": 50.0,
+      "estado": "estimación Flash v2.5 según plan, a confirmar"
+    },
+    "cartesia": {
+      "por_millon_caracteres": 30.0,
+      "estado": "estimación, a confirmar"
+    },
+    "deepgram": {
+      "por_millon_caracteres": 30.0,
+      "estado": "Aura-2, a confirmar"
+    }
+  }
+}

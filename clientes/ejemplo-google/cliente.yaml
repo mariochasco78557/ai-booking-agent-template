@@ -1,0 +1,38 @@
+# Cliente FICTICIO de prueba del adaptador google-calendar (fase 3, D-014). Datos inventados; sin secretos.
+# Zona distinta de Madrid a propósito. Para usarlo: CLIENT_ID=ejemplo-google y CALENDAR_PROVIDER=google-calendar.
+nombre: "Clínica Ejemplo"
+sector:
+  nombre: "clínica"
+  negocio: "la clínica"
+  palabra_empleado: "fisioterapeuta"
+idioma: es-ES
+zona_horaria: America/Mexico_City
+telefono:
+  mostrar: "55 0000 0000"
+  e164: "+525500000000"
+horario:
+  lunes:     ["09:00-14:00", "16:00-19:00"]
+  martes:    ["09:00-14:00", "16:00-19:00"]
+  miercoles: ["09:00-14:00", "16:00-19:00"]
+  jueves:    ["09:00-14:00", "16:00-19:00"]
+  viernes:   ["09:00-14:00"]
+  sabado:    []
+  domingo:   []
+cierres:
+  - { desde: "2026-12-24", hasta: "2026-12-26", motivo: "Navidad" }
+duracion_cita_min: 30
+servicios:
+  - { id: "1", nombre: "Consulta", duracion_min: 30, precio: 500 }
+  - { id: "2", nombre: "Sesión de fisioterapia", duracion_min: 60, precio: 800 }
+empleados:
+  - { nombre: "Ana", calendario: "ana.ejemplo@group.calendar.google.com", id: 1 }
+  - { nombre: "Luis", calendario: "luis.ejemplo@group.calendar.google.com", id: 2 }
+canales:
+  whatsapp: false
+  voz: false
+calendario:
+  provider: google-calendar
+  empleado_por_defecto: 1
+  servicio_por_defecto: "1"
+  google:
+    paso_min: 30

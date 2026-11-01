@@ -1,0 +1,51 @@
+# Reference client: "Demo Salon", an INVENTED barbershop used by the test suite and `npm run dev`.
+# No secrets: business data only. Precedence (D-007): environment variable > this file > code default.
+# Every name, phone and URL here is fictitious.
+nombre: "Demo Salon"
+nombre_corto: "Demo Salon"             # texts (D-010): «el equipo de Demo Salon»
+sector:
+  nombre: "peluquería"
+  negocio: "la peluquería"
+  palabra_empleado: "peluquero"
+responsable: "Bruno"                   # who receives messages and agenda alerts («Le paso tu recado a Bruno»)
+idioma: es-ES
+zona_horaria: Europe/Madrid
+telefono:                              # public business phone (synthetic)
+  mostrar: "910 00 00 25"
+  e164: "+34910000025"
+# direccion: intentionally unset; when set it replaces WHATSAPP_CALENDAR_LOCATION if that is undefined.
+enlaces:                               # informative only
+  api_publica: "https://api.booking.example.com"
+  whatsapp: "https://whatsapp.booking.example.com"
+horario:                               # used by the `memory` / `google-calendar` providers
+  lunes:     []
+  martes:    ["09:30-13:30", "16:00-20:00"]
+  miercoles: ["09:30-13:30", "16:00-20:00"]
+  jueves:    ["09:30-13:30", "16:00-20:00"]
+  viernes:   ["09:30-13:30", "16:00-20:00"]
+  sabado:    ["09:00-14:00"]
+  domingo:   []
+dias_cerrados: [domingo, lunes]        # BALANCED_CLOSED_WEEKDAYS="0,1"
+cierre_temprano:                       # BALANCED_EARLY_CLOSE="6=14:00"
+  sabado: "14:00"
+cierres: []
+duracion_cita_min: 30
+servicios:                             # id = service id in the calendar backend
+  - { id: "0", nombre: "Barba", duracion_min: 30 }
+  - { id: "1", nombre: "Corte de pelo", duracion_min: 30, etiquetas: { corta: "corte" } }   # agenda alert: «corte»
+  - { id: "2", nombre: "Corte y barba", duracion_min: 30 }
+empleados:                             # calendario = employee/calendar id in the backend (memory: any id)
+  - { nombre: "Bruno", calendario: 1, nombre_agenda: "Bruno", apellidos_agenda: "Demo" }
+  - { nombre: "Olga", calendario: 2 }
+  - { nombre: "Ramón", calendario: 3 }
+canales:
+  whatsapp: true
+  voz: true
+plantilla_whatsapp: "cita_confirmada_demo_salon"  # Meta-approved template name (WHATSAPP_TEMPLATE_NAME wins)
+calendario:
+  provider: memory                     # memory | google-calendar
+  empleado_por_defecto: 1
+  servicio_por_defecto: "1"
+marca_ia:                              # marker in the name of bookings created by voice
+  prefijo: "IA -"
+  separador: space

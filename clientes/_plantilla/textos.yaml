@@ -1,0 +1,3 @@
+# Optional per-client text overrides. Key = a key of src/core/texts/defaultTexts.es.ts.
+# Placeholders ({responsable}, {negocio}, {dia}, {hora}, ...) must match the default text; the loader validates them.
+"wa.anular_pendiente.avisado": "Le he pasado a {responsable} tu petición de anular la cita del {dia} a las {hora}. Hasta que la anule, la cita sigue en pie."

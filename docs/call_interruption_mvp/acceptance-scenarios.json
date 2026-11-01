@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "1.0.0",
+  "profileId": "demo-salon-call-interruption-synthetic-v1",
+  "scenarios": [
+    {
+      "id": "A01-explicit-service-booking",
+      "title": "Reserva sintética con servicio confirmado",
+      "intent": "BOOK",
+      "given": { "day": "monday", "time": "10:00", "professionalId": 3, "serviceId": 1, "serviceConfirmed": true, "bookingConfirmed": true },
+      "expected": { "outcome": "RESUELVE", "reasonCode": "BOOKING_CONFIRMED", "effectiveServiceId": 1, "externalMutation": false, "syntheticMutation": true, "announcesSuccess": true }
+    },
+    {
+      "id": "A02-service-not-confirmed",
+      "title": "No se reserva sin confirmar servicio",
+      "intent": "BOOK",
+      "given": { "day": "monday", "time": "10:00", "professionalId": 3, "serviceId": null, "serviceConfirmed": false, "bookingConfirmed": true },
+      "expected": { "outcome": "DERIVA", "reasonCode": "SERVICE_NOT_CONFIRMED", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A03-availability-information",
+      "title": "Consulta de disponibilidad dentro del horario sintético",
+      "intent": "CHECK_AVAILABILITY",
+      "given": { "day": "tuesday", "time": "14:30", "professionalId": 6, "serviceId": 2, "serviceConfirmed": true },
+      "expected": { "outcome": "RESUELVE", "reasonCode": "AVAILABILITY_PROVIDED", "effectiveServiceId": 2, "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A04-human-request",
+      "title": "La persona pide ayuda humana",
+      "intent": "HUMAN_HELP",
+      "given": {},
+      "expected": { "outcome": "DERIVA", "reasonCode": "CUSTOMER_REQUESTS_HUMAN", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A05-cancel-never-mutates",
+      "title": "Cancelación fuera del alcance de la demo",
+      "intent": "CANCEL",
+      "given": { "reservationRef": "synthetic-reference" },
+      "expected": { "outcome": "DERIVA", "reasonCode": "CANCEL_OR_CHANGE_NOT_ENABLED", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A06-reschedule-never-mutates",
+      "title": "Cambio de cita fuera del alcance de la demo",
+      "intent": "RESCHEDULE",
+      "given": { "reservationRef": "synthetic-reference", "time": "15:00" },
+      "expected": { "outcome": "DERIVA", "reasonCode": "CANCEL_OR_CHANGE_NOT_ENABLED", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A07-unknown-price",
+      "title": "Precio no aprobado",
+      "intent": "ASK_PRICE",
+      "given": { "serviceId": 1 },
+      "expected": { "outcome": "DERIVA", "reasonCode": "BUSINESS_DATA_NOT_APPROVED", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A08-technical-failure",
+      "title": "Fallo técnico antes de confirmar",
+      "intent": "BOOK",
+      "given": { "day": "monday", "time": "11:00", "professionalId": 3, "serviceId": 0, "serviceConfirmed": true, "bookingConfirmed": true, "injectFailure": true },
+      "expected": { "outcome": "DERIVA", "reasonCode": "TECHNICAL_FAILURE", "effectiveServiceId": 0, "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A09-break-is-unavailable",
+      "title": "La pausa no se ofrece como hueco",
+      "intent": "CHECK_AVAILABILITY",
+      "given": { "day": "tuesday", "time": "13:30", "professionalId": 6, "serviceId": 1, "serviceConfirmed": true },
+      "expected": { "outcome": "DERIVA", "reasonCode": "SLOT_OUTSIDE_SYNTHETIC_SCHEDULE", "effectiveServiceId": 1, "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A10-third-party-privacy-boundary",
+      "title": "No se accede a la cita de otra persona",
+      "intent": "OTHER",
+      "given": { "attemptsThirdPartyAccess": true },
+      "expected": { "outcome": "RECHAZA", "reasonCode": "SECURITY_OR_PRIVACY_BOUNDARY", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A11-intent-unresolved-after-clarification",
+      "title": "La intención sigue sin entenderse tras la única aclaración permitida",
+      "intent": "OTHER",
+      "given": { "clarificationAttempted": true, "intentResolved": false },
+      "expected": { "outcome": "DERIVA", "reasonCode": "INTENT_NOT_UNDERSTOOD", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A12-security-precedence-over-technical-failure",
+      "title": "Un fallo técnico no enmascara un límite de seguridad o privacidad",
+      "intent": "OTHER",
+      "given": { "attemptsThirdPartyAccess": true, "injectFailure": true },
+      "expected": { "outcome": "RECHAZA", "reasonCode": "SECURITY_OR_PRIVACY_BOUNDARY", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A13-technical-failure-overrides-imminent-booking",
+      "title": "Fallo técnico justo antes de completar una reserva que iba a confirmarse",
+      "intent": "BOOK",
+      "given": { "day": "monday", "time": "10:00", "professionalId": 3, "serviceId": 1, "serviceConfirmed": true, "bookingConfirmed": true, "injectFailure": true },
+      "expected": { "outcome": "DERIVA", "reasonCode": "TECHNICAL_FAILURE", "effectiveServiceId": 1, "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A14-human-request-overrides-cancel-block",
+      "title": "Pide hablar con una persona mientras también solicita cancelar",
+      "intent": "HUMAN_HELP",
+      "given": { "alsoRequestsCancellation": true, "reservationRef": "synthetic-reference" },
+      "expected": { "outcome": "DERIVA", "reasonCode": "CUSTOMER_REQUESTS_HUMAN", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    },
+    {
+      "id": "A15-cancel-intent-yielding-to-explicit-human-request",
+      "title": "Intención de cancelar en la que el cliente pide expresamente una persona",
+      "intent": "CANCEL",
+      "given": { "reservationRef": "synthetic-reference", "explicitlyRequestsHuman": true },
+      "expected": { "outcome": "DERIVA", "reasonCode": "CUSTOMER_REQUESTS_HUMAN", "externalMutation": false, "syntheticMutation": false, "announcesSuccess": false }
+    }
+  ]
+}

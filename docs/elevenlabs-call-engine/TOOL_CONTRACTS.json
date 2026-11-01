@@ -1,0 +1,149 @@
+{
+  "documentKind": "booking_elevenlabs_tool_contracts",
+  "documentVersion": 1,
+  "description": "Referencia declarativa para configurar manualmente ElevenLabs. No se importa ni se publica automáticamente y no demuestra que exista un agente.",
+  "status": "local_synthetic_not_uploaded",
+  "configurationMode": "manual_dashboard",
+  "baseUrl": "http://127.0.0.1:<PORT>",
+  "authentication": {
+    "type": "secret_header",
+    "header": "X-Booking-Voice-Secret",
+    "value": "<LOCAL_WEBHOOK_SECRET>"
+  },
+  "tools": [
+    {
+      "name": "booking_availability",
+      "method": "POST",
+      "path": "/v1/elevenlabs/availability",
+      "conversationIdSource": "system__conversation_id",
+      "bodySchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conversation_id",
+          "date_iso",
+          "time",
+          "service_id",
+          "professional_id",
+          "service_confirmed"
+        ],
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "dynamic_variable": "system__conversation_id"
+          },
+          "date_iso": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "service_id": {
+            "type": "integer",
+            "enum": [0, 1, 2]
+          },
+          "professional_id": {
+            "type": "string",
+            "description": "Id numérico en texto, p. ej. \"3\", o el literal \"any\". La API de ElevenLabs solo admite un literal en type, así que el número viaja como cadena de dígitos y el puente lo convierte a entero antes de validarlo.",
+            "pattern": "^(?:\\d+|any)$"
+          },
+          "service_confirmed": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "name": "booking_book",
+      "method": "POST",
+      "path": "/v1/elevenlabs/book",
+      "conversationIdSource": "system__conversation_id",
+      "bodySchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conversation_id",
+          "date_iso",
+          "time",
+          "service_id",
+          "professional_id",
+          "service_confirmed",
+          "booking_confirmed"
+        ],
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "dynamic_variable": "system__conversation_id"
+          },
+          "date_iso": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "service_id": {
+            "type": "integer",
+            "enum": [0, 1, 2]
+          },
+          "professional_id": {
+            "type": "string",
+            "description": "Id numérico en texto, p. ej. \"3\", o el literal \"any\". La API de ElevenLabs solo admite un literal en type, así que el número viaja como cadena de dígitos y el puente lo convierte a entero antes de validarlo.",
+            "pattern": "^(?:\\d+|any)$"
+          },
+          "service_confirmed": {
+            "const": true
+          },
+          "booking_confirmed": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "name": "booking_human_help",
+      "method": "POST",
+      "path": "/v1/elevenlabs/human-help",
+      "conversationIdSource": "system__conversation_id",
+      "bodySchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conversation_id",
+          "reason"
+        ],
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "dynamic_variable": "system__conversation_id"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "explicit_request",
+              "cancel",
+              "reschedule",
+              "special_service",
+              "price_or_policy",
+              "urgent"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

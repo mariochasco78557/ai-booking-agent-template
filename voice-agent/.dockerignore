@@ -1,0 +1,10 @@
+.venv
+.pytest_cache
+**/__pycache__
+*.pyc
+tests
+.env
+.env.*
+calls
+*.jsonl
+(internal doc, not included in the template)

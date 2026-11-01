@@ -1,0 +1,93 @@
+{
+  "conversation_id": "conv_fixture_0000000000000000C3",
+  "agent_id": "agent_fixture_demo_salon_0001",
+  "agent_name": "DEMO SALON (fixture)",
+  "status": "done",
+  "has_audio": true,
+  "has_user_audio": true,
+  "has_response_audio": true,
+  "has_auxiliary_audio": false,
+  "transcript": [
+    {
+      "role": "agent",
+      "time_in_call_secs": 0.0,
+      "message": "Peluquería DEMO SALON, ¿en qué puedo ayudarte?",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.55
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 6.4,
+      "message": "¿Hacéis tinte de barba? Y si eso llámame al 600 00 01 23.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 9.1,
+      "message": "Eso no lo puedo consultar por teléfono, lo siento.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.88
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 13.0,
+      "message": "Vale, gracias.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    }
+  ],
+  "metadata": {
+    "start_time_unix_secs": 1789137486,
+    "call_duration_secs": 17,
+    "cost_fiat": 0.02,
+    "cost": 140,
+    "termination_reason": "user_hangup",
+    "phone_call": {
+      "direction": "inbound",
+      "type": "twilio",
+      "external_number": "+34600000123",
+      "agent_number": "+34900000000"
+    },
+    "main_language": "es"
+  },
+  "analysis": {
+    "call_successful": "unknown",
+    "transcript_summary": "Consulta sobre un servicio no soportado; sin herramientas y sin reserva.",
+    "evaluation_criteria_results": {},
+    "data_collection_results": {}
+  },
+  "conversation_initiation_client_data": {
+    "dynamic_variables": {}
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "conversations": [
+      {
+        "conversation_id": "conv_fixture_0000000000000000A1",
+        "agent_id": "agent_fixture_demo_salon_0001",
+        "agent_name": "DEMO SALON (fixture)",
+        "start_time_unix_secs": 1789139417,
+        "call_duration_secs": 124,
+        "message_count": 10,
+        "status": "done",
+        "call_successful": "success",
+        "termination_reason": "end_call_tool",
+        "direction": "inbound"
+      },
+      {
+        "conversation_id": "conv_fixture_0000000000000000B2",
+        "agent_id": "agent_fixture_demo_salon_0001",
+        "agent_name": "DEMO SALON (fixture)",
+        "start_time_unix_secs": 1789137372,
+        "call_duration_secs": 58,
+        "message_count": 9,
+        "status": "done",
+        "call_successful": "failure",
+        "termination_reason": "user_hangup",
+        "direction": "inbound"
+      }
+    ],
+    "has_more": true,
+    "next_cursor": "cursor_pagina_2"
+  },
+  {
+    "conversations": [
+      {
+        "conversation_id": "conv_fixture_0000000000000000C3",
+        "agent_id": "agent_fixture_demo_salon_0001",
+        "agent_name": "DEMO SALON (fixture)",
+        "start_time_unix_secs": 1789137486,
+        "call_duration_secs": 17,
+        "message_count": 4,
+        "status": "done",
+        "call_successful": "unknown",
+        "termination_reason": "user_hangup",
+        "direction": "inbound"
+      }
+    ],
+    "has_more": false,
+    "next_cursor": null
+  }
+]

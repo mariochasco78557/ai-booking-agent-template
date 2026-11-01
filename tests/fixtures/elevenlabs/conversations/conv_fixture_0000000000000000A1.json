@@ -1,0 +1,296 @@
+{
+  "conversation_id": "conv_fixture_0000000000000000A1",
+  "agent_id": "agent_fixture_demo_salon_0001",
+  "agent_name": "DEMO SALON (fixture)",
+  "status": "done",
+  "has_audio": true,
+  "has_user_audio": true,
+  "has_response_audio": true,
+  "has_auxiliary_audio": false,
+  "transcript": [
+    {
+      "role": "agent",
+      "time_in_call_secs": 0.0,
+      "message": "Peluquería DEMO SALON, ¿en qué puedo ayudarte?",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.61
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.18
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 6.2,
+      "message": "Quería cortarme el pelo mañana por la tarde.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 10.4,
+      "message": "Déjame mirar.",
+      "tool_calls": [
+        {
+          "request_id": "req_a1",
+          "tool_name": "balanced_availability",
+          "params_as_json": "{\"action\": \"discover\", \"service_id\": 1, \"date\": \"2026-09-12\", \"time_period\": \"tarde\", \"conversation_id\": \"conv_fixture_0000000000000000A1\"}",
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ],
+      "tool_results": [
+        {
+          "request_id": "req_a1",
+          "tool_name": "balanced_availability",
+          "result_value": "{\"status\": 200, \"outcome\": \"options\", \"options\": 3}",
+          "is_error": false,
+          "tool_has_been_called": true,
+          "type": "webhook",
+          "is_blocked": false,
+          "tool_latency_secs": 0.83,
+          "error_type": "",
+          "raw_error_message": "",
+          "dynamic_variable_updates": []
+        }
+      ],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.94
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.21
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 12.9,
+      "message": "Tengo las 17:00, las 17:30 y las 18:15.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 19.8,
+      "message": "Las 17:30 me va bien.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 24.0,
+      "message": "Perfecto, te reservo las 17:30. ¿Me dices tu nombre y un teléfono?",
+      "tool_calls": [
+        {
+          "request_id": "req_a2",
+          "tool_name": "balanced_availability",
+          "params_as_json": "{\"action\": \"lock\", \"option_index\": 2, \"service_id\": 1, \"date\": \"2026-09-12\", \"preferred_time\": \"17:30\", \"conversation_id\": \"conv_fixture_0000000000000000A1\"}",
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ],
+      "tool_results": [
+        {
+          "request_id": "req_a2",
+          "tool_name": "balanced_availability",
+          "result_value": "{\"status\": 200, \"outcome\": \"locked\", \"employee_id\": 3}",
+          "is_error": false,
+          "tool_has_been_called": true,
+          "type": "webhook",
+          "is_blocked": false,
+          "tool_latency_secs": 0.83,
+          "error_type": "",
+          "raw_error_message": "",
+          "dynamic_variable_updates": []
+        }
+      ],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 1.12
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.2
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "user",
+      "time_in_call_secs": 110.8,
+      "message": "Perdona, estaba buscando el número. Soy Cliente Prueba y mi móvil es el +34600000123.",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio"
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 113.0,
+      "message": "Confirmado.",
+      "tool_calls": [
+        {
+          "request_id": "req_a3",
+          "tool_name": "create_booking",
+          "params_as_json": "{\"conversation_id\": \"conv_fixture_0000000000000000A1\", \"service_id\": 1, \"date\": \"2026-09-12\", \"preferred_time\": \"17:30\", \"employee_id\": 3, \"customer_name\": \"Cliente\", \"customer_surnames\": \"Prueba\", \"phone\": \"+34600000123\", \"confirmed_by_customer\": true}",
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ],
+      "tool_results": [
+        {
+          "request_id": "req_a3",
+          "tool_name": "create_booking",
+          "result_value": "{\"status\": 200, \"outcome\": \"confirmed\", \"booked\": true, \"external_mutation\": true, \"mutation_status\": \"created\", \"duration_ms\": 1781}",
+          "is_error": false,
+          "tool_has_been_called": true,
+          "type": "webhook",
+          "is_blocked": false,
+          "tool_latency_secs": 2.0,
+          "error_type": "",
+          "raw_error_message": "",
+          "dynamic_variable_updates": []
+        }
+      ],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 3.42
+          },
+          "convai_tts_service_ttfb": {
+            "elapsed_time": 0.25
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 116.19,
+      "message": "Un momento.",
+      "tool_calls": [
+        {
+          "request_id": "req_a4",
+          "tool_name": "create_booking",
+          "params_as_json": "{\"conversation_id\": \"conv_fixture_0000000000000000A1\", \"service_id\": 1, \"date\": \"2026-09-12\", \"preferred_time\": \"17:30\", \"employee_id\": 3, \"customer_name\": \"Cliente\", \"customer_surnames\": \"Prueba\", \"phone\": \"+34600000123\", \"confirmed_by_customer\": true}",
+          "tool_has_been_called": true,
+          "type": "webhook"
+        }
+      ],
+      "tool_results": [
+        {
+          "request_id": "req_a4",
+          "tool_name": "create_booking",
+          "result_value": "{\"status\": 200, \"outcome\": \"already_booked\", \"booked\": true, \"external_mutation\": false, \"mutation_status\": \"duplicate_absorbed\", \"duration_ms\": 3}",
+          "is_error": false,
+          "tool_has_been_called": true,
+          "type": "webhook",
+          "is_blocked": false,
+          "tool_latency_secs": 0.01,
+          "error_type": "",
+          "raw_error_message": "",
+          "dynamic_variable_updates": []
+        }
+      ],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.71
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    },
+    {
+      "role": "agent",
+      "time_in_call_secs": 119.4,
+      "message": "Listo Cliente Prueba, mañana a las 17:30. ¡Hasta mañana!",
+      "tool_calls": [],
+      "tool_results": [],
+      "interrupted": false,
+      "original_message": null,
+      "source_medium": "audio",
+      "conversation_turn_metrics": {
+        "metrics": {
+          "convai_llm_service_ttf_sentence": {
+            "elapsed_time": 0.66
+          }
+        },
+        "convai_asr_provider": "fixture",
+        "convai_tts_model": "fixture"
+      }
+    }
+  ],
+  "metadata": {
+    "start_time_unix_secs": 1789139417,
+    "call_duration_secs": 124,
+    "cost_fiat": 0.11,
+    "cost": 940,
+    "termination_reason": "end_call_tool",
+    "phone_call": {
+      "direction": "inbound",
+      "type": "twilio",
+      "external_number": "+34600000123",
+      "agent_number": "+34900000000"
+    },
+    "main_language": "es"
+  },
+  "analysis": {
+    "call_successful": "success",
+    "transcript_summary": "Cliente Prueba (+34600000123) reserva un corte para el 12 a las 17:30 con el empleado 3.",
+    "evaluation_criteria_results": {
+      "reserva_completada": {
+        "result": "success",
+        "rationale": "Se creó la reserva de Cliente Prueba."
+      }
+    },
+    "data_collection_results": {}
+  },
+  "conversation_initiation_client_data": {
+    "dynamic_variables": {
+      "caller_number": "+34600000123"
+    }
+  }
+}

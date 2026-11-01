@@ -1,0 +1,157 @@
+{
+  "$comment": "WHATSAPP V1 ((internal doc, not included in the template) ADR-032). The THREE self-service tools of the ElevenLabs agent that answers on WhatsApp. They are ADDED to that agent next to the existing booking tools (booking_availability_balanced_v2 / booking_create_booking_balanced_v2, which keep their own document). Mirrors src/schemas/waSelfServiceSchemas.ts and src/routes/waSelfService.ts; tests/waToolSchemasContract.test.ts asserts route/schema agreement. Every route needs TWO secrets (X-AI-Webhook-Secret AND X-AI-WA-Secret) and the header X-AI-WA-Caller-Id, whose value is the DYNAMIC VARIABLE {{system__caller_id}} (value type: dynamic variable, never filled by the LLM). The customer's phone is NEVER a tool parameter: the server reads it only from that header. Every authenticated answer is HTTP 200; read `outcome`. Values between angle brackets are placeholders and secrets must stay out of Git. Setup steps: (internal doc, not included in the template).",
+  "baseUrl": "https://<DOMAIN>",
+  "authHeader": {
+    "name": "X-AI-Webhook-Secret",
+    "value": "<AI_WEBHOOK_SECRET>"
+  },
+  "waAuthHeader": {
+    "$comment": "Second credential of /ai/wa/* (WA_SELF_SERVICE_SECRET). The voice agent does not have it.",
+    "name": "X-AI-WA-Secret",
+    "value": "<WA_SELF_SERVICE_SECRET>"
+  },
+  "callerIdHeader": {
+    "$comment": "The WhatsApp sender, as ElevenLabs knows it. Dynamic variable, not typed by the model. The same header is added to the booking tool of the WhatsApp agent so the written ownerPhone is the sender's (DESIGN section 7).",
+    "name": "X-AI-WA-Caller-Id",
+    "value": "{{system__caller_id}}"
+  },
+  "tools": [
+    {
+      "name": "booking_mis_citas",
+      "description": "List the customer's upcoming appointments (max 3) booked with THIS WhatsApp number. The number comes from the chat itself — never ask for it and never send it. Returns outcome, a ready-to-send Spanish message and, per appointment, reservation_ref, day_label, time, professional and cancellable. Never read reservation_ref aloud.",
+      "method": "POST",
+      "path": "/ai/wa/my-reservations",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>",
+        "X-AI-WA-Secret": "<WA_SELF_SERVICE_SECRET>",
+        "X-AI-WA-Caller-Id": "{{system__caller_id}}"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "description": "Bind to the system__conversation_id dynamic variable. Only used for log correlation."
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "booking_cancelar_cita",
+      "description": "Cancel ONE appointment returned by booking_mis_citas. Only after the customer clearly confirmed that exact appointment. When changing an appointment, call this ONLY after the new appointment is confirmed. Read outcome: only 'cancelled' means it is cancelled.",
+      "method": "POST",
+      "path": "/ai/wa/cancel",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>",
+        "X-AI-WA-Secret": "<WA_SELF_SERVICE_SECRET>",
+        "X-AI-WA-Caller-Id": "{{system__caller_id}}"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "description": "Bind to the system__conversation_id dynamic variable. Only used for log correlation."
+          },
+          "reservation_ref": {
+            "type": "string",
+            "description": "The reservation_ref of the chosen appointment, copied LITERALLY from booking_mis_citas. Never invented, never shortened."
+          },
+          "confirmed_by_customer": {
+            "type": "boolean",
+            "description": "Exactly true, and only after a clear yes to 'do you want me to cancel the appointment of {day_label} at {time}?'. Otherwise false."
+          }
+        },
+        "required": ["reservation_ref", "confirmed_by_customer"]
+      }
+    },
+    {
+      "name": "booking_cambiar_servicio",
+      "description": "Change ONLY the service of ONE appointment returned by booking_mis_citas (same day, hour and professional). The first call (without confirmed_by_customer) never changes anything: it returns the server's question in 'message'; copy it. Only after a clear yes to THAT question, call again with confirmed_by_customer true and the same reservation_ref and service_id. Only 'service_changed' means it is changed. Copy the 'message' of the result.",
+      "method": "POST",
+      "path": "/ai/wa/change-service",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>",
+        "X-AI-WA-Secret": "<WA_SELF_SERVICE_SECRET>",
+        "X-AI-WA-Caller-Id": "{{system__caller_id}}"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "description": "Bind to the system__conversation_id dynamic variable. Only used for log correlation."
+          },
+          "reservation_ref": {
+            "type": "string",
+            "description": "The reservation_ref of the chosen appointment, copied LITERALLY from booking_mis_citas. Never invented, never shortened."
+          },
+          "service_id": {
+            "type": "integer",
+            "enum": [0, 1, 2],
+            "description": "The NEW service: 0 = barba, 1 = corte de pelo, 2 = corte y barba."
+          },
+          "confirmed_by_customer": {
+            "type": "boolean",
+            "description": "Exactly true only on the second call, after a clear yes to the question the first call returned. Omit it (or false) on the first call."
+          }
+        },
+        "required": ["reservation_ref", "service_id"]
+      }
+    },
+    {
+      "name": "avisar_a_owner",
+      "description": "Leave a written notice for Bruno, the owner, when you cannot solve the request: the customer wants a person, the number cannot be identified, an appointment is not found, a complaint, or anything outside booking. Outcome 'owner_notified' means Bruno has it; never promise when he will answer.",
+      "method": "POST",
+      "path": "/ai/wa/notify-owner",
+      "headers": {
+        "Content-Type": "application/json",
+        "X-AI-Webhook-Secret": "<AI_WEBHOOK_SECRET>",
+        "X-AI-WA-Secret": "<WA_SELF_SERVICE_SECRET>",
+        "X-AI-WA-Caller-Id": "{{system__caller_id}}"
+      },
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "description": "Bind to the system__conversation_id dynamic variable. Only used for log correlation."
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "wants_human",
+              "cannot_identify",
+              "reservation_not_found",
+              "cancel_request",
+              "change_request",
+              "complaint",
+              "other"
+            ],
+            "description": "Why the notice is left."
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "In Spanish: what the customer wants, in one or two sentences."
+          },
+          "customer_name": {
+            "type": "string",
+            "maxLength": 80,
+            "description": "Optional. The customer's first name if they gave it."
+          },
+          "callback_phone": {
+            "type": "string",
+            "maxLength": 32,
+            "description": "Optional. Only if the chat does not show a phone number: the number the customer says Bruno can use. It is not verified."
+          }
+        },
+        "required": ["reason", "summary"]
+      }
+    }
+  ]
+}
